@@ -1,0 +1,24 @@
+# Environment
+.env
+.env.local
+.env.production
+
+# ASP.NET
+**/bin/
+**/obj/
+.vs/
+
+# React
+node_modules/
+dist/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local uploaded files
+**/uploads/
