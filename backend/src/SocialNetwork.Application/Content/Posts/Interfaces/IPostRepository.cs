@@ -11,4 +11,8 @@ public interface IPostRepository
     Task AddAsync(
         Post post,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Post>> GetPageAsync(Guid? communityId, int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<int> CountAsync(Guid? communityId, CancellationToken cancellationToken = default);
+    Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

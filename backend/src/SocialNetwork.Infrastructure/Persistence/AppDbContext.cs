@@ -15,6 +15,8 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<EmailVerification> EmailVerifications => Set<EmailVerification>();
+    public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<Follow> Follows => Set<Follow>();
     public DbSet<FriendRequest> FriendRequests => Set<FriendRequest>();
     public DbSet<UserBlock> UserBlocks => Set<UserBlock>();

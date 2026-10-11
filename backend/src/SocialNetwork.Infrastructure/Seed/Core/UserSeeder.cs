@@ -1,6 +1,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using SocialNetwork.Domain.Identity.Entities;
+using SocialNetwork.Infrastructure.Authentication;
 
 namespace SocialNetwork.Infrastructure.Persistence.Seed.Core;
 
@@ -14,9 +15,9 @@ public static class UserSeeder
     {
         var users = new[]
         {
-            CreateUser(SeedIds.DemoUser1Id, "demo1@socialnetwork.local", "demo_user_1"),
-            CreateUser(SeedIds.DemoUser2Id, "demo2@socialnetwork.local", "demo_user_2"),
-            CreateUser(SeedIds.DemoUser3Id, "demo3@socialnetwork.local", "demo_user_3")
+            CreateUser(SeedIds.DemoUser1Id, "demo1@socialnetwork.local", "demo_user_1", "Demo Builder"),
+            CreateUser(SeedIds.DemoUser2Id, "demo2@socialnetwork.local", "demo_user_2", "Demo Creator"),
+            CreateUser(SeedIds.DemoUser3Id, "demo3@socialnetwork.local", "demo_user_3", "Demo Community")
         };
 
         foreach (var user in users)
@@ -32,9 +33,35 @@ public static class UserSeeder
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        var profileNames = new Dictionary<Guid, string>
+        {
+            [SeedIds.DemoUser1Id] = "Demo Builder",
+            [SeedIds.DemoUser2Id] = "Demo Creator",
+            [SeedIds.DemoUser3Id] = "Demo Community"
+        };
+        foreach (var profile in profileNames)
+        {
+            if (!await dbContext.UserProfiles.AnyAsync(
+                    item => item.UserId == profile.Key,
+                    cancellationToken))
+                dbContext.UserProfiles.Add(new UserProfile
+                {
+                    UserId = profile.Key,
+                    DisplayName = profile.Value
+                });
+        }
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var seededUsers = await dbContext.Users
+            .Where(user => profileNames.Keys.Contains(user.Id))
+            .ToListAsync(cancellationToken);
+        foreach (var seededUser in seededUsers.Where(user => user.PasswordHash == "Demo_Only"))
+            seededUser.PasswordHash = PasswordService.Hash(DemoPassword);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private static User CreateUser(Guid id, string email, string username)
+    private static User CreateUser(Guid id, string email, string username, string displayName)
     {
         var user = new User
         {
@@ -46,6 +73,7 @@ public static class UserSeeder
             CreatedAt = DateTime.UtcNow
         };
 
+        user.Profile = new UserProfile { UserId = id, DisplayName = displayName };
         user.PasswordHash = "Demo_Only";
         return user;
     }

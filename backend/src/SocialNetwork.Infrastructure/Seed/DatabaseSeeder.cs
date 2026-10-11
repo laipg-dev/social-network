@@ -10,10 +10,9 @@ public static class DatabaseSeeder
     {
         // Seed dữ liệu nền trước vì các module khác có thể phụ thuộc vào User.
         await UserSeeder.SeedAsync(dbContext, cancellationToken);
-        
-        // Sau này đăng ký module seeder tại đây, theo đúng thứ tự dependency.
+        await ContentSeeder.SeedAsync(dbContext, cancellationToken);
+
         // await CommunitySeeder.SeedAsync(dbContext, cancellationToken);
-        // await ContentSeeder.SeedAsync(dbContext, cancellationToken);
         // await MessagingSeeder.SeedAsync(dbContext, cancellationToken);
     }
 }

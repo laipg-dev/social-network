@@ -6,6 +6,9 @@ using SocialNetwork.Application.Common.Interfaces;
 using SocialNetwork.Infrastructure.Authentication;
 using SocialNetwork.Application.Common.Storage;
 using SocialNetwork.Infrastructure.Storage;
+using SocialNetwork.Application.Identity.Auth.Interfaces;
+using SocialNetwork.Application.Common.Email;
+using SocialNetwork.Infrastructure.Email;
 
 namespace SocialNetwork.Infrastructure;
 
@@ -29,7 +32,14 @@ public static class DependencyInjection
         
         services.Configure<StorageOptions>(
             configuration.GetSection(StorageOptions.SectionName));
+        services.Configure<EmailOptions>(
+            configuration.GetSection(EmailOptions.SectionName));
+        services.AddHttpClient<IEmailSender, BrevoEmailSender>(client =>
+        {
+            client.BaseAddress = new Uri("https://api.brevo.com/");
+        });
         services.AddScoped<IFileStorage, LocalFileStorage>();
+        services.AddScoped<IAuthService, AuthService>();
         return services;
     }
 }

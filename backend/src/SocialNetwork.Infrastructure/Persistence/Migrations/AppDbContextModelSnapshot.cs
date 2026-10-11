@@ -412,6 +412,38 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                     b.ToTable("PostReactions");
                 });
 
+            modelBuilder.Entity("SocialNetwork.Domain.Identity.Entities.EmailVerification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("VerifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("EmailVerifications");
+                });
+
             modelBuilder.Entity("SocialNetwork.Domain.Identity.Entities.Follow", b =>
                 {
                     b.Property<Guid>("FollowerId")
@@ -462,6 +494,38 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                     b.ToTable("FriendRequests");
                 });
 
+            modelBuilder.Entity("SocialNetwork.Domain.Identity.Entities.PasswordReset", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PasswordResets");
+                });
+
             modelBuilder.Entity("SocialNetwork.Domain.Identity.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -474,12 +538,20 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<DateTime?>("RevokedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -1213,6 +1285,17 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SocialNetwork.Domain.Identity.Entities.EmailVerification", b =>
+                {
+                    b.HasOne("SocialNetwork.Domain.Identity.Entities.User", "User")
+                        .WithMany("EmailVerifications")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SocialNetwork.Domain.Identity.Entities.Follow", b =>
                 {
                     b.HasOne("SocialNetwork.Domain.Identity.Entities.User", "Follower")
@@ -1249,6 +1332,17 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                     b.Navigation("Receiver");
 
                     b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("SocialNetwork.Domain.Identity.Entities.PasswordReset", b =>
+                {
+                    b.HasOne("SocialNetwork.Domain.Identity.Entities.User", "User")
+                        .WithMany("PasswordResets")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SocialNetwork.Domain.Identity.Entities.RefreshToken", b =>
@@ -1536,9 +1630,13 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
 
                     b.Navigation("BlockedUsers");
 
+                    b.Navigation("EmailVerifications");
+
                     b.Navigation("Followers");
 
                     b.Navigation("Following");
+
+                    b.Navigation("PasswordResets");
 
                     b.Navigation("Profile");
 

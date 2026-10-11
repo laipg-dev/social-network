@@ -18,6 +18,8 @@ public class User
 
     public ICollection<RefreshToken> RefreshTokens { get; set; }
         = new List<RefreshToken>();
+    public ICollection<EmailVerification> EmailVerifications { get; set; } = new List<EmailVerification>();
+    public ICollection<PasswordReset> PasswordResets { get; set; } = new List<PasswordReset>();
 
     public ICollection<Follow> Followers { get; set; }
     = new List<Follow>();

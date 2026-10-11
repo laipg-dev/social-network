@@ -1,0 +1,70 @@
+@baseUrl = http://localhost:5201
+
+### Register a user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "new.user@example.com",
+  "username": "new_user",
+  "password": "Password123!",
+  "displayName": "New User"
+}
+
+### Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "new.user@example.com",
+  "password": "Password123!"
+}
+
+### Refresh access token
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "PASTE_REFRESH_TOKEN_HERE"
+}
+
+### Logout and revoke refresh token
+POST {{baseUrl}}/api/auth/logout
+Content-Type: application/json
+
+{
+  "refreshToken": "PASTE_REFRESH_TOKEN_HERE"
+}
+
+### Request email verification (development returns token)
+POST {{baseUrl}}/api/auth/email-verification/request
+Content-Type: application/json
+
+{
+  "email": "new.user@example.com"
+}
+
+### Confirm email verification
+POST {{baseUrl}}/api/auth/email-verification/confirm
+Content-Type: application/json
+
+{
+  "token": "PASTE_VERIFICATION_TOKEN_HERE"
+}
+
+### Request password reset (development returns token)
+POST {{baseUrl}}/api/auth/password-reset/request
+Content-Type: application/json
+
+{
+  "email": "new.user@example.com"
+}
+
+### Confirm password reset
+POST {{baseUrl}}/api/auth/password-reset/confirm
+Content-Type: application/json
+
+{
+  "token": "PASTE_RESET_TOKEN_HERE",
+  "password": "NewPassword123!"
+}

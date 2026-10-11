@@ -14,6 +14,18 @@ using SocialNetwork.Application.Content.Posts.Services;
 using SocialNetwork.Infrastructure.Persistence.Repositories;
 using SocialNetwork.Application.Common.Realtime;
 using SocialNetwork.Api.Realtime;
+using SocialNetwork.Application.Identity.Profile.Interfaces;
+using SocialNetwork.Infrastructure.Identity;
+using SocialNetwork.Application.Content.Comments.Interfaces;
+using SocialNetwork.Infrastructure.Content.Comments;
+using SocialNetwork.Application.Content.Reactions.Interfaces;
+using SocialNetwork.Infrastructure.Content.Reactions;
+using SocialNetwork.Application.Content.Bookmarks.Interfaces;
+using SocialNetwork.Infrastructure.Content.Bookmarks;
+using SocialNetwork.Application.Content.Media.Interfaces;
+using SocialNetwork.Infrastructure.Content.Media;
+using SocialNetwork.Application.Communities.Interfaces;
+using SocialNetwork.Infrastructure.Communities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +48,13 @@ builder.Services.AddScoped<
     
     builder.Services.AddScoped<IPostService, PostService>();
     builder.Services.AddScoped<IPostRepository, PostRepository>();
+    builder.Services.AddScoped<IProfileService, ProfileService>();
+    builder.Services.AddScoped<ICommentService, CommentService>();
+    builder.Services.AddScoped<IPostReactionService, PostReactionService>();
+    builder.Services.AddScoped<ICommentReactionService, CommentReactionService>();
+    builder.Services.AddScoped<IBookmarkService, BookmarkService>();
+    builder.Services.AddScoped<IPostMediaService, PostMediaService>();
+    builder.Services.AddScoped<ICommunityService, CommunityService>();
 
 
 var app = builder.Build();

@@ -98,29 +98,39 @@ ConnectionStrings__DefaultConnection
 Jwt__Secret
 ```
 
+### Cấu hình Brevo email API
+
+Backend dùng Brevo API để gửi email xác minh tài khoản và email đặt lại mật khẩu,
+không phụ thuộc Gmail App Password. Tạo API key trong Brevo, xác minh sender,
+rồi cập nhật các biến trong `backend\.env`:
+
+```powershell
+Email__Enabled=true
+Email__ApiKey=your-brevo-api-key
+Email__FromAddress=your-verified-brevo-sender@example.com
+Email__FromName=Social Network
+Email__FrontendBaseUrl=http://localhost:3000
+```
+
+File `backend\.env` đã được tạo từ `backend\.env.example` để chạy local.
+`Email__ApiKey` chỉ được đặt trong biến môi trường local và không được commit
+vào repository.
+
 Ngoài ra project có cấu hình development cho JWT issuer/audience, CORS
 và Storage trong `appsettings.Development.json`.
 
-### Nạp `.env` khi chạy ASP.NET bằng PowerShell
+### Chạy backend với `.env`
 
-Docker Compose tự đọc `.env`, nhưng `dotnet run` không tự parse file
-`.env`.
+`dotnet run` không tự đọc file `.env`. Script `backend\run-dev.ps1` sẽ tự nạp
+các biến vào process rồi chạy API:
 
-Trước khi chạy API trong cùng terminal PowerShell, nạp biến bằng:
-
-``` powershell
-Get-Content .env | ForEach-Object {
-    if ($_ -match '^\s*([^#][^=]+)=(.*)$') {
-        [Environment]::SetEnvironmentVariable(
-            $matches[1].Trim(),
-            $matches[2].Trim(),
-            "Process"
-        )
-    }
-}
+```powershell
+cd E:\workspace\Project\Net\social-network\backend
+.\run-dev.ps1
 ```
 
-Sau đó mới chạy `dotnet run` trong **chính terminal đó**.
+Docker Compose vẫn tự đọc `.env` ở thư mục `social-network`; file đó độc lập
+với `.env` của backend.
 
 > Nếu mở terminal mới thì cần nạp lại `.env`.
 

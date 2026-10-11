@@ -11,6 +11,7 @@ public class PostConfiguration : IEntityTypeConfiguration<Post>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Content).HasMaxLength(10000);
         builder.Property(x => x.Visibility).HasMaxLength(20).IsRequired();
+        builder.Property(x => x.Status).HasMaxLength(20).IsRequired();
         builder.HasOne(x => x.Author).WithMany().HasForeignKey(x => x.AuthorId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.Community).WithMany().HasForeignKey(x => x.CommunityId).OnDelete(DeleteBehavior.SetNull);
     }

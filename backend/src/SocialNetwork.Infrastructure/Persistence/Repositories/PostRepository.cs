@@ -20,15 +20,40 @@ public class PostRepository : IPostRepository
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.Posts
-            .FirstOrDefaultAsync(
-                x => x.Id == id,
-                cancellationToken);
+            .Include(post => post.Author)
+                .ThenInclude(author => author.Profile)
+            .FirstOrDefaultAsync(post => post.Id == id && post.Status != "DELETED", cancellationToken);
     }
     public async Task AddAsync(Post post, CancellationToken cancellationToken)
     {
         await _dbContext.Posts.AddAsync(post, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<Post>> GetPageAsync(
+        Guid? communityId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Posts
+            .AsNoTracking()
+            .Include(post => post.Author)
+                .ThenInclude(author => author.Profile)
+            .Where(post => post.Status == "ACTIVE" &&
+                (communityId == null || post.CommunityId == communityId))
+            .OrderByDescending(post => post.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<int> CountAsync(Guid? communityId, CancellationToken cancellationToken = default) =>
+        _dbContext.Posts.CountAsync(post => post.Status == "ACTIVE" &&
+            (communityId == null || post.CommunityId == communityId), cancellationToken);
+
+    public Task SaveChangesAsync(CancellationToken cancellationToken = default) =>
+        _dbContext.SaveChangesAsync(cancellationToken);
 
     
 }
