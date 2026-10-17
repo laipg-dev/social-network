@@ -11,6 +11,7 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
         builder.HasKey(x => x.UserId);
         builder.Property(x => x.DisplayName).HasMaxLength(100);
         builder.Property(x => x.Bio).HasMaxLength(1000);
+        builder.Property(x => x.Gender).HasMaxLength(20);
         builder.HasOne(x => x.User).WithOne(x => x.Profile).HasForeignKey<UserProfile>(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
     }
 }

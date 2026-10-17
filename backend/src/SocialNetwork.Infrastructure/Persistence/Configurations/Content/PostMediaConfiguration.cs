@@ -12,5 +12,6 @@ public class PostMediaConfiguration : IEntityTypeConfiguration<PostMedia>
         builder.Property(x => x.Url).IsRequired();
         builder.Property(x => x.MediaType).HasMaxLength(20).IsRequired();
         builder.HasOne(x => x.Post).WithMany(x => x.Media).HasForeignKey(x => x.PostId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(x => x.Media).WithMany(m => m.PostMedia).HasForeignKey(x => x.MediaId).OnDelete(DeleteBehavior.SetNull);
     }
 }

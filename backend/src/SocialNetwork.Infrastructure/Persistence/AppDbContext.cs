@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
+    public DbSet<UserSettings> UserSettings => Set<UserSettings>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<EmailVerification> EmailVerifications => Set<EmailVerification>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
@@ -32,6 +33,7 @@ public class AppDbContext : DbContext
     public DbSet<RoomRolePermission> RoomRolePermissions => Set<RoomRolePermission>();
 
     public DbSet<Post> Posts => Set<Post>();
+    public DbSet<Media> Media => Set<Media>();
     public DbSet<PostMedia> PostMedia => Set<PostMedia>();
     public DbSet<Comment> Comments => Set<Comment>();
     public DbSet<PostReaction> PostReactions => Set<PostReaction>();

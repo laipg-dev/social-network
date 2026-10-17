@@ -40,7 +40,9 @@ public sealed class ProfileService(
         user.Profile.Bio = request.Bio?.Trim();
         user.Profile.AvatarUrl = request.AvatarUrl?.Trim();
         user.Profile.CoverUrl = request.CoverUrl?.Trim();
+        user.Profile.Gender = request.Gender?.Trim();
         user.Profile.DateOfBirth = request.DateOfBirth;
+        user.Profile.UpdatedAt = DateTime.UtcNow;
         user.UpdatedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
         return Map(user);
@@ -54,6 +56,21 @@ public sealed class ProfileService(
         var storedFile = await fileStorage.UploadAsync(file, "avatars", cancellationToken);
         user.Profile ??= new Domain.Identity.Entities.UserProfile { UserId = user.Id };
         user.Profile.AvatarUrl = storedFile.Url;
+        user.Profile.UpdatedAt = DateTime.UtcNow;
+        user.UpdatedAt = DateTime.UtcNow;
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Map(user);
+    }
+
+    public async Task<ProfileResponse> UploadCoverAsync(
+        FileUploadRequest file,
+        CancellationToken cancellationToken)
+    {
+        var user = await GetUserAsync(cancellationToken);
+        var storedFile = await fileStorage.UploadAsync(file, "covers", cancellationToken);
+        user.Profile ??= new Domain.Identity.Entities.UserProfile { UserId = user.Id };
+        user.Profile.CoverUrl = storedFile.Url;
+        user.Profile.UpdatedAt = DateTime.UtcNow;
         user.UpdatedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
         return Map(user);
@@ -67,6 +84,6 @@ public sealed class ProfileService(
 
     private static ProfileResponse Map(Domain.Identity.Entities.User user) =>
         new(user.Id, user.Email, user.Username, user.Profile?.DisplayName, user.Profile?.Bio,
-            user.Profile?.AvatarUrl, user.Profile?.CoverUrl, user.Profile?.DateOfBirth,
-            user.IsEmailVerified);
+            user.Profile?.AvatarUrl, user.Profile?.CoverUrl, user.Profile?.Gender, user.Profile?.DateOfBirth,
+            user.IsEmailVerified, user.Profile?.UpdatedAt);
 }

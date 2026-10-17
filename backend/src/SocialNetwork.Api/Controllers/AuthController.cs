@@ -91,4 +91,18 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
         await authService.ResetPasswordAsync(request.Token, request.Password, cancellationToken);
         return NoContent();
     }
+
+    [Authorize]
+    [HttpPost("change-password")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ChangePassword(
+        ChangePasswordRequest request,
+        [FromServices] SocialNetwork.Application.Common.Interfaces.ICurrentUser currentUser,
+        CancellationToken cancellationToken)
+    {
+        await authService.ChangePasswordAsync(currentUser.UserId, request, cancellationToken);
+        return NoContent();
+    }
 }

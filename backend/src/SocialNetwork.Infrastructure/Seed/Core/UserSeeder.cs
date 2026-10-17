@@ -51,11 +51,25 @@ public static class UserSeeder
                     DisplayName = profile.Value
                 });
         }
-        await dbContext.SaveChangesAsync(cancellationToken);
-
         var seededUsers = await dbContext.Users
             .Where(user => profileNames.Keys.Contains(user.Id))
             .ToListAsync(cancellationToken);
+
+        foreach (var user in seededUsers)
+        {
+            if (!await dbContext.UserSettings.AnyAsync(s => s.UserId == user.Id, cancellationToken))
+            {
+                dbContext.UserSettings.Add(new UserSettings
+                {
+                    UserId = user.Id,
+                    Theme = "light",
+                    NotificationEnabled = true,
+                    Language = "vi"
+                });
+            }
+        }
+        await dbContext.SaveChangesAsync(cancellationToken);
+
         foreach (var seededUser in seededUsers.Where(user => user.PasswordHash == "Demo_Only"))
             seededUser.PasswordHash = PasswordService.Hash(DemoPassword);
         await dbContext.SaveChangesAsync(cancellationToken);

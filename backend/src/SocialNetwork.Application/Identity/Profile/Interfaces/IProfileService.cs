@@ -9,4 +9,5 @@ public interface IProfileService
     Task<ProfileResponse> GetAsync(CancellationToken cancellationToken);
     Task<ProfileResponse> UpdateAsync(UpdateProfileRequest request, CancellationToken cancellationToken);
     Task<ProfileResponse> UploadAvatarAsync(FileUploadRequest file, CancellationToken cancellationToken);
+    Task<ProfileResponse> UploadCoverAsync(FileUploadRequest file, CancellationToken cancellationToken);
 }

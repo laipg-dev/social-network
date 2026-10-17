@@ -46,4 +46,26 @@ public sealed class ProfileController(IProfileService profileService) : Controll
             new FileUploadRequest(stream, avatar.FileName, avatar.ContentType, avatar.Length),
             cancellationToken));
     }
+
+    [HttpPost("cover")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType<ProfileResponse>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ProfileResponse>> UploadCover(
+        IFormFile cover,
+        CancellationToken cancellationToken)
+    {
+        if (cover.Length == 0)
+            return BadRequest("Cover file cannot be empty.");
+        if (cover.Length > 10 * 1024 * 1024)
+            return BadRequest("Cover file must be 10 MB or smaller.");
+
+        var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp", "image/gif" };
+        if (!allowedTypes.Contains(cover.ContentType, StringComparer.OrdinalIgnoreCase))
+            return BadRequest("Cover must be a JPG, PNG, WEBP, or GIF image.");
+
+        await using var stream = cover.OpenReadStream();
+        return Ok(await profileService.UploadCoverAsync(
+            new FileUploadRequest(stream, cover.FileName, cover.ContentType, cover.Length),
+            cancellationToken));
+    }
 }

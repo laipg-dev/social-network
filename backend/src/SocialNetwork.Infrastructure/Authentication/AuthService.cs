@@ -38,7 +38,8 @@ public sealed class AuthService(
             Email = email,
             Username = username,
             PasswordHash = PasswordService.Hash(request.Password),
-            Profile = new UserProfile { DisplayName = request.DisplayName?.Trim() }
+            Profile = new UserProfile { DisplayName = request.DisplayName?.Trim() },
+            Settings = new UserSettings()
         };
 
         dbContext.Users.Add(user);
@@ -193,6 +194,34 @@ public sealed class AuthService(
         await dbContext.RefreshTokens
             .Where(item => item.UserId == reset.UserId && item.RevokedAt == null)
             .ExecuteUpdateAsync(update => update.SetProperty(item => item.RevokedAt, DateTime.UtcNow), cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task ChangePasswordAsync(
+        Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken)
+    {
+        var user = await dbContext.Users
+            .SingleOrDefaultAsync(u => u.Id == userId, cancellationToken);
+
+        if (user is null)
+            throw new NotFoundException("User not found.");
+
+        if (!PasswordService.Verify(request.CurrentPassword, user.PasswordHash))
+            throw new UnauthorizedException(
+                "Mật khẩu hiện tại không chính xác.",
+                "AUTH_CURRENT_PASSWORD_INVALID");
+
+        if (request.CurrentPassword == request.NewPassword)
+            throw new ConflictException("Mật khẩu mới không được trùng với mật khẩu hiện tại.");
+
+        user.PasswordHash = PasswordService.Hash(request.NewPassword);
+        user.UpdatedAt = DateTime.UtcNow;
+
+        // Revoke tất cả refresh tokens để bảo mật (đăng xuất khỏi mọi thiết bị)
+        await dbContext.RefreshTokens
+            .Where(t => t.UserId == userId && t.RevokedAt == null)
+            .ExecuteUpdateAsync(update => update.SetProperty(t => t.RevokedAt, DateTime.UtcNow), cancellationToken);
+
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 

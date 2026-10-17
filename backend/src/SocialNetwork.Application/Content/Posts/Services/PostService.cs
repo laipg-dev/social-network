@@ -30,21 +30,11 @@ public class PostService : IPostService
 
         await _postRepository.AddAsync(
             post,
+            request.MediaIds,
             cancellationToken);
 
-        return new PostResponse
-        {
-            Id = post.Id,
-            Content = post.Content,
-            Visibility = post.Visibility,
-            CreatedAt = post.CreatedAt,
-            AuthorId = post.AuthorId,
-            AuthorUsername = post.Author?.Username,
-            AuthorDisplayName = post.Author?.Profile?.DisplayName,
-            AuthorAvatarUrl = post.Author?.Profile?.AvatarUrl,
-            CommunityId = post.CommunityId,
-            Status = post.Status
-        };
+        var createdPost = await _postRepository.GetByIdAsync(post.Id, cancellationToken) ?? post;
+        return Map(createdPost);
     }
 
     public async Task<PostPageResponse> GetPageAsync(
@@ -109,6 +99,11 @@ public class PostService : IPostService
         AuthorDisplayName = post.Author?.Profile?.DisplayName,
         AuthorAvatarUrl = post.Author?.Profile?.AvatarUrl,
         CommunityId = post.CommunityId,
-        Status = post.Status
+        Status = post.Status,
+        Media = post.Media
+            .OrderBy(m => m.Position)
+            .Select(m => new SocialNetwork.Application.Content.Media.Responses.PostMediaResponse(
+                m.Id, m.PostId, m.Url, m.MediaType, m.Position, m.CreatedAt))
+            .ToList()
     };
 }

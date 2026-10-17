@@ -9,7 +9,9 @@ public class UserProfile
     public string? AvatarUrl { get; set; }
     public string? CoverUrl { get; set; }
 
+    public string? Gender { get; set; }
     public DateTime? DateOfBirth { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 
     public User User { get; set; } = null!;
 }

@@ -20,5 +20,8 @@ public sealed record UpdateProfileRequest
     [Url, MaxLength(500)]
     public string? CoverUrl { get; init; }
 
+    [MaxLength(20)]
+    public string? Gender { get; init; }
+
     public DateTime? DateOfBirth { get; init; }
 }

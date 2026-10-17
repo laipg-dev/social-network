@@ -9,5 +9,7 @@ public sealed record ProfileResponse(
     string? Bio,
     string? AvatarUrl,
     string? CoverUrl,
+    string? Gender,
     DateTime? DateOfBirth,
-    bool IsEmailVerified);
+    bool IsEmailVerified,
+    DateTime? UpdatedAt);
