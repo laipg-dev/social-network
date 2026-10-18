@@ -53,7 +53,10 @@ public sealed class AuthService(
         await dbContext.SaveChangesAsync(cancellationToken);
         await emailSender.SendEmailVerificationAsync(
             user.Email, user.Profile?.DisplayName, verificationCode, cancellationToken);
-        return new("Registration successful. Check your email for the verification code.", user.Email);
+        return new(
+            "Registration successful. Check your email for the verification code.",
+            user.Email,
+            environment.IsDevelopment() ? verificationCode : null);
     }
 
     public async Task<AuthResponse> LoginAsync(

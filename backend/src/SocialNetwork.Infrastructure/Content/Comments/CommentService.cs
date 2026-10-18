@@ -44,6 +44,8 @@ public sealed class CommentService(AppDbContext dbContext) : ICommentService
     {
         var comments = await dbContext.Comments
             .AsNoTracking()
+            .Include(comment => comment.Author)
+                .ThenInclude(author => author.Profile)
             .Where(comment => comment.PostId == postId && comment.Status == "ACTIVE")
             .OrderBy(comment => comment.CreatedAt)
             .ToListAsync(cancellationToken);
@@ -65,6 +67,8 @@ public sealed class CommentService(AppDbContext dbContext) : ICommentService
         CancellationToken cancellationToken)
     {
         var comment = await dbContext.Comments
+            .Include(c => c.Author)
+                .ThenInclude(a => a.Profile)
             .SingleOrDefaultAsync(item => item.Id == id && item.Status == "ACTIVE", cancellationToken)
             ?? throw new NotFoundException("Comment", id);
         EnsureAuthor(comment, authorId);
@@ -94,7 +98,8 @@ public sealed class CommentService(AppDbContext dbContext) : ICommentService
 
     private static CommentResponse Map(Comment comment, IReadOnlyList<CommentResponse> replies) =>
         new(comment.Id, comment.PostId, comment.AuthorId, comment.ParentCommentId,
-            comment.Content, comment.Status, comment.CreatedAt, comment.UpdatedAt, replies);
+            comment.Content, comment.Status, comment.CreatedAt, comment.UpdatedAt, replies,
+            comment.Author?.Username, comment.Author?.Profile?.DisplayName, comment.Author?.Profile?.AvatarUrl);
 
     private static void EnsureAuthor(Comment comment, Guid authorId)
     {
