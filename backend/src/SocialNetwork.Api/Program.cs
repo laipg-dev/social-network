@@ -75,13 +75,20 @@ var uploadPath = Path.Combine(
 
 Directory.CreateDirectory(uploadPath);
 
+app.UseCors(CorsExtensions.PolicyName);
+
 app.UseStaticFiles(
     new StaticFileOptions
     {
         FileProvider =
             new PhysicalFileProvider(uploadPath),
-
-        RequestPath = "/uploads"
+        RequestPath = "/uploads",
+        OnPrepareResponse = ctx =>
+        {
+            ctx.Context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+            ctx.Context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+            ctx.Context.Response.Headers.Append("Access-Control-Allow-Headers", "*");
+        }
     });
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -93,8 +100,6 @@ if (app.Environment.IsDevelopment())
 app.UseExceptionHandler();
 
 app.UseHttpsRedirection();
-
-app.UseCors(CorsExtensions.PolicyName);
 
 app.UseAuthentication();
 

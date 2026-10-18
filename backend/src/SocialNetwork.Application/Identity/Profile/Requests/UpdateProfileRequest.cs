@@ -14,11 +14,14 @@ public sealed record UpdateProfileRequest
     [MaxLength(1000)]
     public string? Bio { get; init; }
 
-    [Url, MaxLength(500)]
+    [MaxLength(500)]
     public string? AvatarUrl { get; init; }
 
-    [Url, MaxLength(500)]
+    [MaxLength(500)]
     public string? CoverUrl { get; init; }
+
+    [MaxLength(20)]
+    public string? Gender { get; init; }
 
     public DateTime? DateOfBirth { get; init; }
 }

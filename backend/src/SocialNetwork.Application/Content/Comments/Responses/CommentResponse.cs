@@ -9,4 +9,7 @@ public sealed record CommentResponse(
     string Status,
     DateTime CreatedAt,
     DateTime? UpdatedAt,
-    IReadOnlyList<CommentResponse> Replies);
+    IReadOnlyList<CommentResponse> Replies,
+    string? AuthorUsername = null,
+    string? AuthorDisplayName = null,
+    string? AuthorAvatarUrl = null);

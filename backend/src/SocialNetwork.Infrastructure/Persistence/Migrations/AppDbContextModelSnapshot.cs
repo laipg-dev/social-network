@@ -282,6 +282,11 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("PostId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -319,6 +324,49 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                     b.ToTable("CommentReactions");
                 });
 
+            modelBuilder.Entity("SocialNetwork.Domain.Content.Entities.Media", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("MediaType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("MimeType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ProcessingStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("PENDING");
+
+                    b.Property<Guid>("UploaderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UploaderId");
+
+                    b.ToTable("Media", (string)null);
+                });
+
             modelBuilder.Entity("SocialNetwork.Domain.Content.Entities.Post", b =>
                 {
                     b.Property<Guid>("Id")
@@ -340,6 +388,11 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -367,6 +420,9 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("MediaId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("MediaType")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -383,6 +439,8 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MediaId");
 
                     b.HasIndex("PostId");
 
@@ -649,9 +707,58 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("Gender")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("UserId");
 
                     b.ToTable("UserProfiles");
+                });
+
+            modelBuilder.Entity("SocialNetwork.Domain.Identity.Entities.UserSettings", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AllowDirectMessagesFrom")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasDefaultValue("EVERYONE");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasDefaultValue("vi");
+
+                    b.Property<bool>("NotificationEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Theme")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("light");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("UserSettings", (string)null);
                 });
 
             modelBuilder.Entity("SocialNetwork.Domain.Messaging.Entities.Conversation", b =>
@@ -1237,6 +1344,17 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SocialNetwork.Domain.Content.Entities.Media", b =>
+                {
+                    b.HasOne("SocialNetwork.Domain.Identity.Entities.User", "Uploader")
+                        .WithMany()
+                        .HasForeignKey("UploaderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Uploader");
+                });
+
             modelBuilder.Entity("SocialNetwork.Domain.Content.Entities.Post", b =>
                 {
                     b.HasOne("SocialNetwork.Domain.Identity.Entities.User", "Author")
@@ -1257,11 +1375,18 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("SocialNetwork.Domain.Content.Entities.PostMedia", b =>
                 {
+                    b.HasOne("SocialNetwork.Domain.Content.Entities.Media", "Media")
+                        .WithMany("PostMedia")
+                        .HasForeignKey("MediaId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("SocialNetwork.Domain.Content.Entities.Post", "Post")
                         .WithMany("Media")
                         .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Media");
 
                     b.Navigation("Post");
                 });
@@ -1380,6 +1505,17 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                     b.HasOne("SocialNetwork.Domain.Identity.Entities.User", "User")
                         .WithOne("Profile")
                         .HasForeignKey("SocialNetwork.Domain.Identity.Entities.UserProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SocialNetwork.Domain.Identity.Entities.UserSettings", b =>
+                {
+                    b.HasOne("SocialNetwork.Domain.Identity.Entities.User", "User")
+                        .WithOne("Settings")
+                        .HasForeignKey("SocialNetwork.Domain.Identity.Entities.UserSettings", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1613,6 +1749,11 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                     b.Navigation("Replies");
                 });
 
+            modelBuilder.Entity("SocialNetwork.Domain.Content.Entities.Media", b =>
+                {
+                    b.Navigation("PostMedia");
+                });
+
             modelBuilder.Entity("SocialNetwork.Domain.Content.Entities.Post", b =>
                 {
                     b.Navigation("Bookmarks");
@@ -1645,6 +1786,8 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                     b.Navigation("RefreshTokens");
 
                     b.Navigation("SentFriendRequests");
+
+                    b.Navigation("Settings");
                 });
 
             modelBuilder.Entity("SocialNetwork.Domain.Messaging.Entities.Conversation", b =>

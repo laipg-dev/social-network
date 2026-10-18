@@ -40,6 +40,9 @@ public static class DependencyInjection
         });
         services.AddScoped<IFileStorage, LocalFileStorage>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<SocialNetwork.Application.Identity.Settings.Interfaces.IUserSettingsService, SocialNetwork.Infrastructure.Identity.UserSettingsService>();
+        services.AddScoped<SocialNetwork.Application.Identity.Sessions.Interfaces.ISessionService, SocialNetwork.Infrastructure.Identity.SessionService>();
+        services.AddScoped<SocialNetwork.Application.Content.Media.Interfaces.IMediaService, SocialNetwork.Infrastructure.Content.Media.MediaService>();
         return services;
     }
 }

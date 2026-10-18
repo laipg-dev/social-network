@@ -6,4 +6,5 @@ public sealed class CreatePostRequest
 
     public string Visibility { get; set; } = "PUBLIC";
     public Guid? CommunityId { get; set; }
+    public List<Guid> MediaIds { get; set; } = new();
 }

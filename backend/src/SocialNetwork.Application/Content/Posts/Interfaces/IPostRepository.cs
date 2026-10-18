@@ -10,6 +10,7 @@ public interface IPostRepository
 
     Task AddAsync(
         Post post,
+        IReadOnlyList<Guid>? mediaIds = null,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Post>> GetPageAsync(Guid? communityId, int page, int pageSize, CancellationToken cancellationToken = default);

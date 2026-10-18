@@ -22,11 +22,41 @@ public class PostRepository : IPostRepository
         return await _dbContext.Posts
             .Include(post => post.Author)
                 .ThenInclude(author => author.Profile)
+            .Include(post => post.Media)
             .FirstOrDefaultAsync(post => post.Id == id && post.Status != "DELETED", cancellationToken);
     }
-    public async Task AddAsync(Post post, CancellationToken cancellationToken)
+    public async Task AddAsync(
+        Post post,
+        IReadOnlyList<Guid>? mediaIds = null,
+        CancellationToken cancellationToken = default)
     {
         await _dbContext.Posts.AddAsync(post, cancellationToken);
+
+        if (mediaIds is not null && mediaIds.Count > 0)
+        {
+            var medias = await _dbContext.Media
+                .Where(m => mediaIds.Contains(m.Id) && m.UploaderId == post.AuthorId)
+                .ToListAsync(cancellationToken);
+
+            var position = 0;
+            foreach (var mediaId in mediaIds)
+            {
+                var media = medias.FirstOrDefault(m => m.Id == mediaId);
+                if (media is not null)
+                {
+                    media.ProcessingStatus = "ATTACHED";
+                    post.Media.Add(new PostMedia
+                    {
+                        PostId = post.Id,
+                        MediaId = media.Id,
+                        Url = media.Url,
+                        MediaType = media.MimeType,
+                        Position = position++
+                    });
+                }
+            }
+        }
+
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
@@ -40,6 +70,7 @@ public class PostRepository : IPostRepository
             .AsNoTracking()
             .Include(post => post.Author)
                 .ThenInclude(author => author.Profile)
+            .Include(post => post.Media)
             .Where(post => post.Status == "ACTIVE" &&
                 (communityId == null || post.CommunityId == communityId))
             .OrderByDescending(post => post.CreatedAt)

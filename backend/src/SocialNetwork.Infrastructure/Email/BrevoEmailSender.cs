@@ -48,6 +48,14 @@ public sealed class BrevoEmailSender(
         CancellationToken cancellationToken,
         bool isCode = false)
     {
+        if (ShouldUseDevelopmentFallback())
+        {
+            logger.LogWarning(
+                "[DEV EMAIL] Brevo chưa được cấu hình. Email tới {RecipientEmail} | {Subject} | {Label}: {Action}",
+                recipientEmail, subject, isCode ? "Mã OTP" : "Link", action);
+            return;
+        }
+
         ValidateConfiguration();
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "v3/smtp/email");
@@ -74,14 +82,32 @@ public sealed class BrevoEmailSender(
                 logger.LogError(
                     "Brevo rejected email to {RecipientEmail} with status {StatusCode}: {Details}",
                     recipientEmail, response.StatusCode, details);
+
+                var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+                if (string.Equals(environment, "Development", StringComparison.OrdinalIgnoreCase))
+                {
+                    logger.LogWarning(
+                        "[DEV FALLBACK] Brevo gửi lỗi ({StatusCode}). Mã OTP/Link xác nhận: {Action}",
+                        response.StatusCode, action);
+                    return;
+                }
+
                 throw new InvalidOperationException(
                     "The email provider rejected the message. Check the Brevo sender and API configuration.");
             }
-
         }
         catch (Exception exception) when (exception is not OperationCanceledException and not InvalidOperationException)
         {
             logger.LogError(exception, "Failed to send email through Brevo to {RecipientEmail}", recipientEmail);
+
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            if (string.Equals(environment, "Development", StringComparison.OrdinalIgnoreCase))
+            {
+                logger.LogWarning(
+                    "[DEV FALLBACK] Lỗi kết nối Brevo. Mã OTP/Link xác nhận: {Action}", action);
+                return;
+            }
+
             throw new InvalidOperationException(
                 "The email could not be sent. Check the Brevo API configuration.", exception);
         }
@@ -105,6 +131,19 @@ public sealed class BrevoEmailSender(
 
     private string BuildLink(string path, string token) =>
         $"{_options.FrontendBaseUrl.TrimEnd('/')}{path}?token={Uri.EscapeDataString(token)}";
+
+    private bool ShouldUseDevelopmentFallback()
+    {
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        if (!string.Equals(environment, "Development", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        return !_options.Enabled ||
+               string.IsNullOrWhiteSpace(_options.ApiKey) ||
+               string.IsNullOrWhiteSpace(_options.FromAddress) ||
+               _options.ApiKey == "your-brevo-api-key" ||
+               _options.FromAddress == "your-verified-brevo-sender@example.com";
+    }
 
     private void ValidateConfiguration()
     {

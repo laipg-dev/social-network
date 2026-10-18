@@ -13,4 +13,5 @@ public interface IAuthService
     Task VerifyEmailAsync(string email, string code, CancellationToken cancellationToken);
     Task<ActionTokenResponse> RequestPasswordResetAsync(string email, CancellationToken cancellationToken);
     Task ResetPasswordAsync(string token, string password, CancellationToken cancellationToken);
+    Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken);
 }
