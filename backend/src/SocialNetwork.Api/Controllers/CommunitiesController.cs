@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SocialNetwork.Application.Common.Interfaces;
-using SocialNetwork.Application.Communities.Interfaces;
-using SocialNetwork.Application.Communities.Requests;
-using SocialNetwork.Application.Communities.Responses;
+using SocialNetwork.Application.Content.Communities.Interfaces;
+using SocialNetwork.Application.Content.Communities.Requests;
 
 namespace SocialNetwork.Api.Controllers;
 
@@ -11,47 +10,75 @@ namespace SocialNetwork.Api.Controllers;
 [Route("api/communities")]
 public sealed class CommunitiesController(
     ICommunityService communityService,
+    ICommunityMemberService memberService,
     ICurrentUser currentUser) : ControllerBase
 {
     [HttpGet]
     [AllowAnonymous]
-    public async Task<ActionResult<IReadOnlyList<CommunityResponse>>> Get(
-        [FromQuery] string? search,
+    public async Task<IActionResult> GetPaged(
+        [FromQuery] CommunityQueryParameters parameters,
         CancellationToken cancellationToken)
     {
-        Guid? userId = currentUser.IsAuthenticated ? currentUser.UserId : null;
-        return Ok(await communityService.GetPageAsync(userId, search, cancellationToken));
+        var userId = currentUser.IsAuthenticated
+            ? currentUser.UserId
+            : Guid.Empty;
+        return Ok(await communityService.GetPagedAsync(
+            userId,
+            parameters,
+            cancellationToken));
     }
 
     [HttpGet("{id:guid}")]
     [AllowAnonymous]
-    public async Task<ActionResult<CommunityResponse>> GetById(
+    public async Task<IActionResult> GetById(
         Guid id,
         CancellationToken cancellationToken)
     {
-        Guid? userId = currentUser.IsAuthenticated ? currentUser.UserId : null;
-        return Ok(await communityService.GetByIdAsync(id, userId, cancellationToken));
+        var userId = currentUser.IsAuthenticated
+            ? currentUser.UserId
+            : Guid.Empty;
+        return Ok(await communityService.GetByIdAsync(
+            userId,
+            id,
+            cancellationToken));
     }
 
     [HttpPost]
     [Authorize]
-    public async Task<ActionResult<CommunityResponse>> Create(
-        CreateCommunityRequest request,
+    public async Task<IActionResult> Create(
+        [FromBody] CreateCommunityRequest request,
         CancellationToken cancellationToken)
     {
         var result = await communityService.CreateAsync(
-            currentUser.UserId, request, cancellationToken);
-        return Created($"/api/communities/{result.Id}", result);
+            currentUser.UserId,
+            request,
+            cancellationToken);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     [HttpPut("{id:guid}")]
     [Authorize]
-    public async Task<ActionResult<CommunityResponse>> Update(
+    public async Task<IActionResult> Update(
         Guid id,
-        UpdateCommunityRequest request,
+        [FromBody] UpdateCommunityRequest request,
         CancellationToken cancellationToken) =>
         Ok(await communityService.UpdateAsync(
-            id, currentUser.UserId, request, cancellationToken));
+            currentUser.UserId,
+            id,
+            request,
+            cancellationToken));
+
+    [HttpPatch("{id:guid}/status")]
+    [Authorize]
+    public async Task<IActionResult> UpdateStatus(
+        Guid id,
+        [FromBody] UpdateCommunityStatusRequest request,
+        CancellationToken cancellationToken) =>
+        Ok(await communityService.UpdateStatusAsync(
+            currentUser.UserId,
+            id,
+            request,
+            cancellationToken));
 
     [HttpDelete("{id:guid}")]
     [Authorize]
@@ -59,17 +86,22 @@ public sealed class CommunitiesController(
         Guid id,
         CancellationToken cancellationToken)
     {
-        await communityService.DeleteAsync(id, currentUser.UserId, cancellationToken);
+        await communityService.DeleteAsync(
+            currentUser.UserId,
+            id,
+            cancellationToken);
         return NoContent();
     }
 
+    // Keep the hip membership routes working while clients migrate to
+    // /members/join and /members/me.
     [HttpPut("{id:guid}/membership")]
     [Authorize]
     public async Task<IActionResult> Join(
         Guid id,
         CancellationToken cancellationToken)
     {
-        await communityService.JoinAsync(id, currentUser.UserId, cancellationToken);
+        await memberService.JoinAsync(currentUser.UserId, id, cancellationToken);
         return NoContent();
     }
 
@@ -79,7 +111,7 @@ public sealed class CommunitiesController(
         Guid id,
         CancellationToken cancellationToken)
     {
-        await communityService.LeaveAsync(id, currentUser.UserId, cancellationToken);
+        await memberService.LeaveAsync(currentUser.UserId, id, cancellationToken);
         return NoContent();
     }
 }

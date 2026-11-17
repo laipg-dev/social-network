@@ -11,7 +11,10 @@ using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using SocialNetwork.Application.Content.Posts.Interfaces;
 using SocialNetwork.Application.Content.Posts.Services;
+using SocialNetwork.Application.Content.Communities.Interfaces;
+using SocialNetwork.Application.Content.Communities.Services;
 using SocialNetwork.Infrastructure.Persistence.Repositories;
+using SocialNetwork.Infrastructure.Authorization;
 using SocialNetwork.Application.Common.Realtime;
 using SocialNetwork.Api.Realtime;
 using SocialNetwork.Application.Identity.Profile.Interfaces;
@@ -24,10 +27,12 @@ using SocialNetwork.Application.Content.Bookmarks.Interfaces;
 using SocialNetwork.Infrastructure.Content.Bookmarks;
 using SocialNetwork.Application.Content.Media.Interfaces;
 using SocialNetwork.Infrastructure.Content.Media;
-using SocialNetwork.Application.Communities.Interfaces;
-using SocialNetwork.Infrastructure.Communities;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
 
 // Add services to the container.
 
@@ -55,6 +60,20 @@ builder.Services.AddScoped<
     builder.Services.AddScoped<IBookmarkService, BookmarkService>();
     builder.Services.AddScoped<IPostMediaService, PostMediaService>();
     builder.Services.AddScoped<ICommunityService, CommunityService>();
+    builder.Services.AddScoped<ICommunityRepository, CommunityRepository>();
+    builder.Services.AddScoped<ICommunityAuthorization, CommunityAuthorizationService>();
+    builder.Services.AddScoped<ICommunityMemberService, CommunityMemberService>();
+    builder.Services.AddScoped<ICommunityMemberRepository, CommunityMemberRepository>();
+    builder.Services.AddScoped<ICommunityRoleService, CommunityRoleService>();
+    builder.Services.AddScoped<ICommunityRoleRepository, CommunityRoleRepository>();
+    builder.Services.AddScoped<IPermissionCatalogService, PermissionCatalogService>();
+    builder.Services.AddScoped<IPermissionCatalogRepository, PermissionCatalogRepository>();
+    builder.Services.AddScoped<IRoomService, RoomService>();
+    builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+    builder.Services.AddScoped<IRoomMemberService, RoomMemberService>();
+    builder.Services.AddScoped<IRoomMemberRepository, RoomMemberRepository>();
+    builder.Services.AddScoped<IRoomPermissionService, RoomPermissionService>();
+    builder.Services.AddScoped<IRoomPermissionRepository, RoomPermissionRepository>();
 
 
 var app = builder.Build();

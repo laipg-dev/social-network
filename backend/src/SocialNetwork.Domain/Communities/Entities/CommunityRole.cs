@@ -10,6 +10,8 @@ public class CommunityRole
 
     public int Position { get; set; }
 
+    public bool IsDefault { get; set; }
+
     public Community Community { get; set; } = null!;
 
     public ICollection<CommunityMemberRole> Members { get; set; }
