@@ -72,11 +72,17 @@ public class RoomService : IRoomService
             roomId,
             cancellationToken);
 
-        var access = await _authorization.RequireRoomPermissionAsync(
+        var access = await _authorization.GetRoomAccessAsync(
             roomId,
             currentUserId,
-            CommunityPermissions.RoomView,
             cancellationToken);
+
+        // Không có quyền truy cập Room.
+        // Trả về 404 để tránh tiết lộ Room cho người không có quyền.
+        if (!access.CanView)
+        {
+            throw new NotFoundException("Room", roomId);
+        }
 
         var memberCount = await _roomRepository.GetMemberCountAsync(
             roomId,

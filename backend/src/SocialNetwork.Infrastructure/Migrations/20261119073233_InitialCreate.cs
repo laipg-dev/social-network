@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace SocialNetwork.Infrastructure.Persistence.Migrations
+namespace SocialNetwork.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -64,10 +64,12 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     OwnerId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    Slug = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
                     AvatarUrl = table.Column<string>(type: "text", nullable: true),
                     CoverUrl = table.Column<string>(type: "text", nullable: true),
                     IsPublic = table.Column<bool>(type: "boolean", nullable: false),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false, defaultValue: "ACTIVE"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
@@ -141,6 +143,28 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EmailVerifications",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    TokenHash = table.Column<string>(type: "text", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    VerifiedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EmailVerifications", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EmailVerifications_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -230,6 +254,28 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "PasswordResets",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    TokenHash = table.Column<string>(type: "text", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UsedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PasswordResets", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PasswordResets_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "RefreshTokens",
                 columns: table => new
                 {
@@ -238,7 +284,9 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                     Token = table.Column<string>(type: "text", nullable: false),
                     ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    RevokedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    RevokedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    IpAddress = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
+                    UserAgent = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -365,7 +413,11 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                 {
                     CommunityId = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    JoinedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false, defaultValue: "ACTIVE"),
+                    RequestedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    JoinedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    LeftAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -391,7 +443,8 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     CommunityId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Position = table.Column<int>(type: "integer", nullable: false)
+                    Position = table.Column<int>(type: "integer", nullable: false),
+                    IsDefault = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false)
                 },
                 constraints: table =>
                 {
@@ -413,6 +466,7 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                     CommunityId = table.Column<Guid>(type: "uuid", nullable: true),
                     Content = table.Column<string>(type: "character varying(10000)", maxLength: 10000, nullable: true),
                     Visibility = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
@@ -444,7 +498,10 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                     Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     Type = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     Position = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    IsPublic = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false, defaultValue: "ACTIVE"),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -617,6 +674,7 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                     AuthorId = table.Column<Guid>(type: "uuid", nullable: false),
                     ParentCommentId = table.Column<Guid>(type: "uuid", nullable: true),
                     Content = table.Column<string>(type: "character varying(5000)", maxLength: 5000, nullable: false),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
@@ -865,6 +923,12 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                 column: "OwnerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Communities_Slug",
+                table: "Communities",
+                column: "Slug",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CommunityBans_BannedById",
                 table: "CommunityBans",
                 column: "BannedById");
@@ -883,6 +947,11 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                 name: "IX_CommunityMemberRoles_RoleId",
                 table: "CommunityMemberRoles",
                 column: "RoleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CommunityMembers_CommunityId_Status",
+                table: "CommunityMembers",
+                columns: new[] { "CommunityId", "Status" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_CommunityMembers_UserId",
@@ -919,6 +988,17 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                 name: "IX_DirectMessages_SenderId",
                 table: "DirectMessages",
                 column: "SenderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EmailVerifications_TokenHash",
+                table: "EmailVerifications",
+                column: "TokenHash",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EmailVerifications_UserId",
+                table: "EmailVerifications",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Follows_FollowingId",
@@ -959,6 +1039,17 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                 name: "IX_Notifications_UserId_IsRead_CreatedAt",
                 table: "Notifications",
                 columns: new[] { "UserId", "IsRead", "CreatedAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PasswordResets_TokenHash",
+                table: "PasswordResets",
+                column: "TokenHash",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PasswordResets_UserId",
+                table: "PasswordResets",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Permissions_Code",
@@ -1048,9 +1139,15 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Rooms_CommunityId",
+                name: "IX_Rooms_CommunityId_Name",
                 table: "Rooms",
-                column: "CommunityId");
+                columns: new[] { "CommunityId", "Name" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Rooms_CommunityId_Position",
+                table: "Rooms",
+                columns: new[] { "CommunityId", "Position" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserBlocks_BlockedId",
@@ -1092,6 +1189,9 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
                 name: "DirectMessageAttachments");
 
             migrationBuilder.DropTable(
+                name: "EmailVerifications");
+
+            migrationBuilder.DropTable(
                 name: "Follows");
 
             migrationBuilder.DropTable(
@@ -1105,6 +1205,9 @@ namespace SocialNetwork.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "Notifications");
+
+            migrationBuilder.DropTable(
+                name: "PasswordResets");
 
             migrationBuilder.DropTable(
                 name: "PostMedia");

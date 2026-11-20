@@ -302,6 +302,7 @@ public class CommunityAuthorizationService : ICommunityAuthorization
         bool isRoomMember,
         IReadOnlyList<RoomPermissionOverride> overrides)
     {
+        // Người không thuộc Community không được truy cập Room.
         if (!communityAccess.IsMember)
         {
             return new RoomAccess
@@ -311,6 +312,7 @@ public class CommunityAuthorizationService : ICommunityAuthorization
             };
         }
 
+        // Community Owner có toàn quyền.
         if (communityAccess.IsOwner)
         {
             return new RoomAccess
@@ -321,11 +323,13 @@ public class CommunityAuthorizationService : ICommunityAuthorization
             };
         }
 
+        // Lấy các permission từ Role của thành viên Community.
         var permissions = new HashSet<string>(
             communityAccess.Permissions,
             StringComparer.Ordinal);
 
-        // Room override: deny thắng allow (fail-closed).
+        // Áp dụng Room Permission Override.
+        // Deny luôn ưu tiên hơn Allow.
         foreach (var group in overrides.GroupBy(
             x => x.Code,
             StringComparer.Ordinal))
@@ -340,10 +344,15 @@ public class CommunityAuthorizationService : ICommunityAuthorization
             }
         }
 
-        var canView = permissions.Contains(CommunityPermissions.RoomView)
-            && (isPublic
-                || isRoomMember
-                || permissions.Contains(CommunityPermissions.RoomManage));
+        // PUBLIC:
+        // Thành viên Community được truy cập.
+        //
+        // PRIVATE:
+        // Chỉ Room Member hoặc người có ROOM_VIEW / ROOM_MANAGE.
+        var canView = isPublic
+            || isRoomMember
+            || permissions.Contains(CommunityPermissions.RoomView)
+            || permissions.Contains(CommunityPermissions.RoomManage);
 
         return new RoomAccess
         {
