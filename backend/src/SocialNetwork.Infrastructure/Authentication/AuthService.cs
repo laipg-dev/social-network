@@ -66,13 +66,13 @@ public sealed class AuthService(
 
         if (user is null)
             throw new UnauthorizedException(
-                "No account was found with this email address.",
-                "AUTH_EMAIL_NOT_FOUND");
+                "Email or password is incorrect.",
+                "AUTH_INVALID_CREDENTIALS");
 
         if (!PasswordService.Verify(request.Password, user.PasswordHash))
             throw new UnauthorizedException(
-                "The password is incorrect.",
-                "AUTH_PASSWORD_INVALID");
+                "Email or password is incorrect.",
+                "AUTH_INVALID_CREDENTIALS");
 
         if (!user.IsActive)
             throw new UnauthorizedException(
@@ -193,6 +193,21 @@ public sealed class AuthService(
         await dbContext.RefreshTokens
             .Where(item => item.UserId == reset.UserId && item.RevokedAt == null)
             .ExecuteUpdateAsync(update => update.SetProperty(item => item.RevokedAt, DateTime.UtcNow), cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task ChangePasswordAsync(Guid userId, string currentPassword, string newPassword, CancellationToken cancellationToken)
+    {
+        var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Id == userId, cancellationToken)
+            ?? throw new NotFoundException("User", userId);
+        if (!PasswordService.Verify(currentPassword, user.PasswordHash))
+            throw new UnauthorizedException("The current password is incorrect.");
+        if (PasswordService.Verify(newPassword, user.PasswordHash))
+            throw new ValidationException(new Dictionary<string, string[]> { ["newPassword"] = ["The new password must differ from the current password."] });
+        user.PasswordHash = PasswordService.Hash(newPassword);
+        user.UpdatedAt = DateTime.UtcNow;
+        await dbContext.RefreshTokens.Where(x => x.UserId == userId && x.RevokedAt == null)
+            .ExecuteUpdateAsync(x => x.SetProperty(t => t.RevokedAt, DateTime.UtcNow), cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 

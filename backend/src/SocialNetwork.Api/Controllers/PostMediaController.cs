@@ -18,8 +18,18 @@ public sealed class PostMediaController(
     public async Task<ActionResult<IReadOnlyList<PostMediaResponse>>> Get(
         Guid postId,
         CancellationToken cancellationToken) =>
-        Ok(await mediaService.GetForPostAsync(postId, cancellationToken));
+        Ok(await mediaService.GetForPostAsync(postId,currentUser.IsAuthenticated?currentUser.UserId:null,new Uri($"{Request.Scheme}://{Request.Host}"),cancellationToken));
 
+    [HttpGet("{mediaId:guid}/access")]
+    [AllowAnonymous]
+    public async Task<ActionResult<PostMediaResponse>> Access(Guid postId, Guid mediaId, CancellationToken cancellationToken)
+    {
+        var response = await mediaService.GetAccessAsync(postId, mediaId, currentUser.IsAuthenticated ? currentUser.UserId : null,
+            new Uri($"{Request.Scheme}://{Request.Host}"), cancellationToken);
+        return Ok(response);
+    }
+
+    [Authorize]
     [HttpPost]
     [Consumes("multipart/form-data")]
     public async Task<ActionResult<PostMediaResponse>> Add(
@@ -36,13 +46,14 @@ public sealed class PostMediaController(
         return Created($"/api/posts/{postId}/media/{result.Id}", result);
     }
 
+    [Authorize]
     [HttpDelete("{mediaId:guid}")]
     public async Task<IActionResult> Delete(
         Guid postId,
         Guid mediaId,
         CancellationToken cancellationToken)
     {
-        await mediaService.DeleteAsync(mediaId, currentUser.UserId, cancellationToken);
+        await mediaService.DeleteAsync(postId, mediaId, currentUser.UserId, cancellationToken);
         return NoContent();
     }
 }

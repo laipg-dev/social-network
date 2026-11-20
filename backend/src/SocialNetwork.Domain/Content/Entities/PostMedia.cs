@@ -6,7 +6,10 @@ public class PostMedia
 
     public Guid PostId { get; set; }
 
-    public string Url { get; set; } = string.Empty;
+    public string? StorageKey { get; set; }
+
+    // Kept only to preserve pre-migration URL values. New code must not read or write this field.
+    public string? LegacyUrl { get; private set; }
 
     public string MediaType { get; set; } = string.Empty;
 

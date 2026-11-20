@@ -5,8 +5,7 @@ using SocialNetwork.Application.Common.Exceptions;
 namespace SocialNetwork.Api.Middleware;
 
 public sealed class GlobalExceptionHandler(
-    ILogger<GlobalExceptionHandler> logger,
-    IHostEnvironment environment) : IExceptionHandler
+    ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
@@ -54,9 +53,7 @@ public sealed class GlobalExceptionHandler(
             _ => (
                 StatusCodes.Status500InternalServerError,
                 "INTERNAL_SERVER_ERROR",
-                environment.IsDevelopment()
-                    ? exception.Message
-                    : "An unexpected error occurred.",
+                "An unexpected error occurred.",
                 null)
         };
 

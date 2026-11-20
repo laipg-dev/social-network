@@ -51,7 +51,9 @@ public class CommunityMemberRepository : ICommunityMemberRepository
             .ThenInclude(x => x.Profile)
             .Include(x => x.Roles)
             .ThenInclude(x => x.Role)
-            .Where(x => x.CommunityId == communityId);
+            .Where(x => x.CommunityId == communityId
+                && !_dbContext.CommunityBans.Any(b => b.CommunityId == communityId && b.UserId == x.UserId
+                    && b.RevokedAt == null && (b.ExpiresAt == null || b.ExpiresAt > DateTime.UtcNow)));
 
         if (!string.IsNullOrWhiteSpace(status))
         {

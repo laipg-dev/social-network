@@ -4,17 +4,18 @@ using SocialNetwork.Application.Content.Bookmarks.Interfaces;
 using SocialNetwork.Application.Content.Posts.Responses;
 using SocialNetwork.Domain.Content.Entities;
 using SocialNetwork.Infrastructure.Persistence;
+using SocialNetwork.Application.Content.Posts.Interfaces;
 
 namespace SocialNetwork.Infrastructure.Content.Bookmarks;
 
-public sealed class BookmarkService(AppDbContext dbContext) : IBookmarkService
+public sealed class BookmarkService(AppDbContext dbContext, IPostAccessService postAccess) : IBookmarkService
 {
     public async Task<bool> SaveAsync(
         Guid postId,
         Guid userId,
         CancellationToken cancellationToken)
     {
-        await EnsureActivePostAsync(postId, cancellationToken);
+        await postAccess.EnsureCanViewAsync(postId,userId,cancellationToken);
 
         var bookmark = await dbContext.Bookmarks
             .SingleOrDefaultAsync(item => item.PostId == postId && item.UserId == userId, cancellationToken);
@@ -36,7 +37,7 @@ public sealed class BookmarkService(AppDbContext dbContext) : IBookmarkService
         Guid userId,
         CancellationToken cancellationToken)
     {
-        await EnsureActivePostAsync(postId, cancellationToken);
+        await postAccess.EnsureCanViewAsync(postId,userId,cancellationToken);
 
         var bookmark = await dbContext.Bookmarks
             .SingleOrDefaultAsync(item => item.PostId == postId && item.UserId == userId, cancellationToken);
@@ -52,12 +53,17 @@ public sealed class BookmarkService(AppDbContext dbContext) : IBookmarkService
     public Task<bool> IsSavedAsync(
         Guid postId,
         Guid userId,
-        CancellationToken cancellationToken) =>
-        dbContext.Bookmarks.AnyAsync(
+        CancellationToken cancellationToken) => IsSavedAuthorizedAsync(postId,userId,cancellationToken);
+
+    private async Task<bool> IsSavedAuthorizedAsync(Guid postId,Guid userId,CancellationToken ct)
+    {
+        await postAccess.EnsureCanViewAsync(postId,userId,ct);
+        return await dbContext.Bookmarks.AnyAsync(
             item => item.PostId == postId &&
                     item.UserId == userId &&
                     item.Post.Status == "ACTIVE",
-            cancellationToken);
+            ct);
+    }
 
     public async Task<PostPageResponse> GetPageAsync(
         Guid userId,
@@ -73,19 +79,19 @@ public sealed class BookmarkService(AppDbContext dbContext) : IBookmarkService
             .Where(item => item.UserId == userId && item.Post.Status == "ACTIVE")
             .OrderByDescending(item => item.CreatedAt);
 
-        var totalCount = await query.CountAsync(cancellationToken);
-        var posts = await query
+        var candidates = await query
             .Include(item => item.Post)
                 .ThenInclude(post => post.Author)
             .Include(item => item.Post)
                 .ThenInclude(post => post.Author.Profile)
             .Select(item => item.Post)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .ToListAsync(cancellationToken);
+        var accessible=new List<Post>();foreach(var post in candidates){try{await postAccess.EnsureCanViewAsync(post.Id,userId,cancellationToken);accessible.Add(post);}catch(NotFoundException){}}
+        var totalCount=accessible.Count;
+        var allowed=accessible.Skip((page-1)*pageSize).Take(pageSize).ToList();
 
         return new(
-            posts.Select(Map).ToList(),
+            allowed.Select(Map).ToList(),
             page,
             pageSize,
             totalCount,

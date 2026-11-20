@@ -23,6 +23,11 @@ public sealed class CommentReactionsController(
         return Ok(await reactionService.GetAsync(commentId, userId, cancellationToken));
     }
 
+    [AllowAnonymous]
+    [HttpGet("users")]
+    public async Task<IActionResult> Users(Guid commentId,[FromQuery]int page=1,[FromQuery]int pageSize=20,CancellationToken ct=default)=>Ok(await reactionService.GetUsersAsync(commentId,currentUser.IsAuthenticated?currentUser.UserId:null,page,pageSize,ct));
+
+    [Authorize]
     [HttpPut]
     public async Task<ActionResult<CommentReactionResponse>> Set(
         Guid commentId,
@@ -30,6 +35,7 @@ public sealed class CommentReactionsController(
         CancellationToken cancellationToken) =>
         Ok(await reactionService.SetAsync(commentId, currentUser.UserId, request, cancellationToken));
 
+    [Authorize]
     [HttpDelete]
     public async Task<ActionResult<CommentReactionResponse>> Remove(
         Guid commentId,

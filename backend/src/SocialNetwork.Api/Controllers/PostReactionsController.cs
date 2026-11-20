@@ -23,6 +23,11 @@ public sealed class PostReactionsController(
         return Ok(await reactionService.GetAsync(postId, userId, cancellationToken));
     }
 
+    [AllowAnonymous]
+    [HttpGet("users")]
+    public async Task<IActionResult> Users(Guid postId,[FromQuery]int page=1,[FromQuery]int pageSize=20,CancellationToken ct=default)=>Ok(await reactionService.GetUsersAsync(postId,currentUser.IsAuthenticated?currentUser.UserId:null,page,pageSize,ct));
+
+    [Authorize]
     [HttpPut]
     public async Task<ActionResult<PostReactionResponse>> Set(
         Guid postId,
@@ -30,6 +35,7 @@ public sealed class PostReactionsController(
         CancellationToken cancellationToken) =>
         Ok(await reactionService.SetAsync(postId, currentUser.UserId, request, cancellationToken));
 
+    [Authorize]
     [HttpDelete]
     public async Task<ActionResult<PostReactionResponse>> Remove(
         Guid postId,

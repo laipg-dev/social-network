@@ -20,14 +20,13 @@ public static class AuthenticationExtensions {
 {
 
     OnAuthenticationFailed = context =>
-{
-    Console.WriteLine("========== JWT AUTH FAILED ==========");
-    Console.WriteLine(context.Exception.GetType().FullName);
-    Console.WriteLine(context.Exception.Message);
-    Console.WriteLine("=====================================");
-
-    return Task.CompletedTask;
-},
+    {
+        var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("JwtAuthentication");
+        logger.LogWarning("JWT authentication failed ({FailureType}); TraceId: {TraceId}",
+            context.Exception.GetType().Name, context.HttpContext.TraceIdentifier);
+        return Task.CompletedTask;
+    },
 
     OnChallenge = async context =>
     {

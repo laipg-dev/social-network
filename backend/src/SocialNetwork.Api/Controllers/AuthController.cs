@@ -3,15 +3,18 @@ using Microsoft.AspNetCore.Mvc;
 using SocialNetwork.Application.Identity.Auth.Interfaces;
 using SocialNetwork.Application.Identity.Auth.Requests;
 using SocialNetwork.Application.Identity.Auth.Responses;
+using SocialNetwork.Application.Common.Interfaces;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace SocialNetwork.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-[AllowAnonymous]
-public sealed class AuthController(IAuthService authService) : ControllerBase
+public sealed class AuthController(IAuthService authService, ICurrentUser currentUser) : ControllerBase
 {
     [HttpPost("register")]
+    [EnableRateLimiting("auth-sensitive")]
+    [AllowAnonymous]
     [ProducesResponseType<RegistrationResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -24,6 +27,8 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("auth-sensitive")]
+    [AllowAnonymous]
     [ProducesResponseType<AuthResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -35,6 +40,7 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     }
 
     [HttpPost("refresh")]
+    [AllowAnonymous]
     [ProducesResponseType<AuthResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<AuthResponse>> Refresh(
@@ -48,6 +54,7 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     }
 
     [HttpPost("logout")]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Logout(
         RefreshRequest request, CancellationToken cancellationToken)
@@ -57,6 +64,8 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     }
 
     [HttpPost("email-verification/request")]
+    [EnableRateLimiting("auth-sensitive")]
+    [AllowAnonymous]
     [ProducesResponseType<ActionTokenResponse>(StatusCodes.Status200OK)]
     public async Task<ActionResult<ActionTokenResponse>> RequestEmailVerification(
         EmailRequest request, CancellationToken cancellationToken)
@@ -65,6 +74,8 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     }
 
     [HttpPost("email-verification/confirm")]
+    [EnableRateLimiting("auth-sensitive")]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> ConfirmEmailVerification(
@@ -75,6 +86,8 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     }
 
     [HttpPost("password-reset/request")]
+    [EnableRateLimiting("auth-sensitive")]
+    [AllowAnonymous]
     [ProducesResponseType<ActionTokenResponse>(StatusCodes.Status200OK)]
     public async Task<ActionResult<ActionTokenResponse>> RequestPasswordReset(
         EmailRequest request, CancellationToken cancellationToken)
@@ -83,6 +96,8 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     }
 
     [HttpPost("password-reset/confirm")]
+    [EnableRateLimiting("auth-sensitive")]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> ConfirmPasswordReset(
@@ -91,4 +106,16 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
         await authService.ResetPasswordAsync(request.Token, request.Password, cancellationToken);
         return NoContent();
     }
+
+    [HttpPost("password/change")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequest request, CancellationToken cancellationToken)
+    {
+        await authService.ChangePasswordAsync(currentUser.UserId, request.CurrentPassword, request.NewPassword, cancellationToken);
+        return NoContent();
+    }
 }
+
+public sealed record ChangePasswordRequest(
+    [property: System.ComponentModel.DataAnnotations.Required] string CurrentPassword,
+    [property: System.ComponentModel.DataAnnotations.Required, System.ComponentModel.DataAnnotations.MinLength(8), System.ComponentModel.DataAnnotations.MaxLength(128)] string NewPassword);

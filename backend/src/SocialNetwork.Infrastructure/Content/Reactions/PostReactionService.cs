@@ -5,10 +5,13 @@ using SocialNetwork.Application.Content.Reactions.Requests;
 using SocialNetwork.Application.Content.Reactions.Responses;
 using SocialNetwork.Domain.Content.Entities;
 using SocialNetwork.Infrastructure.Persistence;
+using SocialNetwork.Application.Content.Posts.Interfaces;
+using SocialNetwork.Application.Common.Responses;
+using SocialNetwork.Application.Identity.SocialGraph;
 
 namespace SocialNetwork.Infrastructure.Content.Reactions;
 
-public sealed class PostReactionService(AppDbContext dbContext) : IPostReactionService
+public sealed class PostReactionService(AppDbContext dbContext, IPostAccessService postAccess) : IPostReactionService
 {
     private static readonly HashSet<string> SupportedTypes =
         new(StringComparer.OrdinalIgnoreCase) { "LIKE", "LOVE", "HAHA", "WOW", "SAD", "ANGRY" };
@@ -26,7 +29,7 @@ public sealed class PostReactionService(AppDbContext dbContext) : IPostReactionS
                 ["type"] = ["Supported values are LIKE, LOVE, HAHA, WOW, SAD and ANGRY."]
             });
 
-        await EnsureActivePostAsync(postId, cancellationToken);
+        await postAccess.EnsureCanViewAsync(postId,userId,cancellationToken);
 
         var reaction = await dbContext.PostReactions
             .SingleOrDefaultAsync(item => item.PostId == postId && item.UserId == userId, cancellationToken);
@@ -55,7 +58,7 @@ public sealed class PostReactionService(AppDbContext dbContext) : IPostReactionS
         Guid userId,
         CancellationToken cancellationToken)
     {
-        await EnsureActivePostAsync(postId, cancellationToken);
+        await postAccess.EnsureCanViewAsync(postId,userId,cancellationToken);
 
         var reaction = await dbContext.PostReactions
             .SingleOrDefaultAsync(item => item.PostId == postId && item.UserId == userId, cancellationToken);
@@ -73,8 +76,17 @@ public sealed class PostReactionService(AppDbContext dbContext) : IPostReactionS
         Guid? userId,
         CancellationToken cancellationToken)
     {
-        await EnsureActivePostAsync(postId, cancellationToken);
+        await postAccess.EnsureCanViewAsync(postId,userId,cancellationToken);
         return await BuildResponseAsync(postId, userId, cancellationToken);
+    }
+
+    public async Task<PagedResponse<PublicUserResponse>> GetUsersAsync(Guid postId,Guid? viewerId,int page,int pageSize,CancellationToken ct)
+    {
+        await postAccess.EnsureCanViewAsync(postId,viewerId,ct);page=Math.Max(1,page);pageSize=Math.Clamp(pageSize,1,100);
+        var q=dbContext.PostReactions.AsNoTracking().Where(x=>x.PostId==postId
+            && !dbContext.CommunityBans.Any(b=>b.CommunityId==x.Post.CommunityId&&b.UserId==x.UserId&&b.CreatedAt>=x.CreatedAt)).Include(x=>x.User).ThenInclude(x=>x.Profile).OrderBy(x=>x.User.Username);
+        var count=await q.CountAsync(ct);var users=await q.Skip((page-1)*pageSize).Take(pageSize).Select(x=>x.User).ToListAsync(ct);
+        return new(){Items=users.Select(x=>new PublicUserResponse(x.Id,x.Username,x.Profile?.DisplayName,x.Profile?.Bio,x.Profile?.AvatarUrl,x.CreatedAt)).ToArray(),Page=page,PageSize=pageSize,TotalCount=count};
     }
 
     private async Task EnsureActivePostAsync(Guid postId, CancellationToken cancellationToken)
@@ -92,7 +104,8 @@ public sealed class PostReactionService(AppDbContext dbContext) : IPostReactionS
     {
         var reactions = await dbContext.PostReactions
             .AsNoTracking()
-            .Where(reaction => reaction.PostId == postId)
+            .Where(reaction => reaction.PostId == postId
+                && !dbContext.CommunityBans.Any(b=>b.CommunityId==reaction.Post.CommunityId&&b.UserId==reaction.UserId&&b.CreatedAt>=reaction.CreatedAt))
             .ToListAsync(cancellationToken);
 
         var counts = reactions
@@ -104,4 +117,5 @@ public sealed class PostReactionService(AppDbContext dbContext) : IPostReactionS
 
         return new PostReactionResponse(postId, currentReaction, counts, reactions.Count);
     }
+
 }

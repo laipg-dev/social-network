@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using SocialNetwork.Application.Common.Interfaces;
 using SocialNetwork.Application.Content.Communities.Interfaces;
 using SocialNetwork.Application.Content.Communities.Requests;
@@ -6,6 +7,7 @@ using SocialNetwork.Application.Content.Communities.Requests;
 namespace SocialNetwork.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/communities/{communityId:guid}/members")]
 public class CommunityMembersController : ControllerBase
 {

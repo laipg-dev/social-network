@@ -9,6 +9,7 @@ public sealed class CommunityAccess
     public bool HasMembership { get; init; }
 
     public bool IsMember { get; init; }
+    public bool IsBanned { get; init; }
 
     public string? MembershipStatus { get; init; }
 

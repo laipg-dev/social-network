@@ -16,5 +16,6 @@ public sealed class PostResponse
     public string? AuthorAvatarUrl { get; set; }
     public Guid? CommunityId { get; set; }
     public string Status { get; set; } = "ACTIVE";
+    public IReadOnlyList<SocialNetwork.Application.Content.Media.Responses.PostMediaResponse> Media { get; set; } = [];
 
 }

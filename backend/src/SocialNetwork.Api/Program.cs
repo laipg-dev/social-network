@@ -2,7 +2,6 @@ using SocialNetwork.Infrastructure;
 using SocialNetwork.Api.Middleware;
 using SocialNetwork.Api.Extensions;
 using SocialNetwork.Api.Hubs;
-using Microsoft.Extensions.FileProviders;
 using SocialNetwork.Infrastructure.Persistence.Seed;
 using SocialNetwork.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -11,14 +10,13 @@ using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using SocialNetwork.Application.Content.Posts.Interfaces;
 using SocialNetwork.Application.Content.Posts.Services;
-using SocialNetwork.Application.Content.Communities.Interfaces;
 using SocialNetwork.Application.Content.Communities.Services;
 using SocialNetwork.Infrastructure.Persistence.Repositories;
 using SocialNetwork.Infrastructure.Authorization;
 using SocialNetwork.Application.Common.Realtime;
 using SocialNetwork.Api.Realtime;
 using SocialNetwork.Application.Identity.Profile.Interfaces;
-using SocialNetwork.Infrastructure.Identity;
+using SocialNetwork.Application.Content.Communities.Interfaces;
 using SocialNetwork.Application.Content.Comments.Interfaces;
 using SocialNetwork.Infrastructure.Content.Comments;
 using SocialNetwork.Application.Content.Reactions.Interfaces;
@@ -27,6 +25,10 @@ using SocialNetwork.Application.Content.Bookmarks.Interfaces;
 using SocialNetwork.Infrastructure.Content.Bookmarks;
 using SocialNetwork.Application.Content.Media.Interfaces;
 using SocialNetwork.Infrastructure.Content.Media;
+using SocialNetwork.Application.Identity.SocialGraph;
+using SocialNetwork.Infrastructure.Identity;
+using System.Threading.RateLimiting;
+using SocialNetwork.Api.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,7 +38,25 @@ builder.Logging.AddDebug();
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<AvatarSignedUrlResultFilter>();
+builder.Services.AddControllers(options => options.Filters.AddService<AvatarSignedUrlResultFilter>());
+var authRateLimit = builder.Configuration.GetSection("RateLimiting:Authentication");
+var permits = authRateLimit.GetValue("PermitLimit", 20);
+var windowSeconds = authRateLimit.GetValue("WindowSeconds", 60);
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("auth-sensitive", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = permits,
+            Window = TimeSpan.FromSeconds(windowSeconds),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        }));
+});
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddSwaggerDocumentation();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -52,6 +72,9 @@ builder.Services.AddScoped<
     SignalRRealtimeNotifier>();
     
     builder.Services.AddScoped<IPostService, PostService>();
+    builder.Services.AddScoped<ISocialGraphService, SocialGraphService>();
+    builder.Services.AddScoped<ICommunityBanService, CommunityBanService>();
+    builder.Services.AddScoped<IPostAccessService, PostAccessService>();
     builder.Services.AddScoped<IPostRepository, PostRepository>();
     builder.Services.AddScoped<IProfileService, ProfileService>();
     builder.Services.AddScoped<ICommentService, CommentService>();
@@ -88,20 +111,6 @@ if (app.Environment.IsDevelopment())
     await DatabaseSeeder.SeedAsync(dbContext);
 }
 
-var uploadPath = Path.Combine(
-    app.Environment.ContentRootPath,
-    "uploads");
-
-Directory.CreateDirectory(uploadPath);
-
-app.UseStaticFiles(
-    new StaticFileOptions
-    {
-        FileProvider =
-            new PhysicalFileProvider(uploadPath),
-
-        RequestPath = "/uploads"
-    });
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -116,8 +125,8 @@ app.UseHttpsRedirection();
 app.UseCors(CorsExtensions.PolicyName);
 
 app.UseAuthentication();
-
 app.UseAuthorization();
+app.UseRateLimiter();
     
 app.MapControllers();
 

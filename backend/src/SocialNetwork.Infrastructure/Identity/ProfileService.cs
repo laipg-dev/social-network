@@ -12,7 +12,7 @@ namespace SocialNetwork.Infrastructure.Identity;
 public sealed class ProfileService(
     AppDbContext dbContext,
     ICurrentUser currentUser,
-    IFileStorage fileStorage) : IProfileService
+    IStorageService fileStorage) : IProfileService
 {
     public async Task<ProfileResponse> GetAsync(CancellationToken cancellationToken)
     {
@@ -53,7 +53,7 @@ public sealed class ProfileService(
         var user = await GetUserAsync(cancellationToken);
         var storedFile = await fileStorage.UploadAsync(file, "avatars", cancellationToken);
         user.Profile ??= new Domain.Identity.Entities.UserProfile { UserId = user.Id };
-        user.Profile.AvatarUrl = storedFile.Url;
+        user.Profile.AvatarUrl = storedFile.StorageKey;
         user.UpdatedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
         return Map(user);

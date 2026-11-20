@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using SocialNetwork.Application.Common.Interfaces;
 using SocialNetwork.Application.Content.Comments.Interfaces;
 using SocialNetwork.Application.Content.Comments.Requests;
@@ -10,6 +11,7 @@ namespace SocialNetwork.Api.Controllers;
 [Route("api")]
 public sealed class CommentsController(ICommentService commentService, ICurrentUser currentUser) : ControllerBase
 {
+    [Authorize]
     [HttpPost("posts/{postId:guid}/comments")]
     public async Task<ActionResult<CommentResponse>> Create(
         Guid postId,
@@ -21,11 +23,13 @@ public sealed class CommentsController(ICommentService commentService, ICurrentU
     }
 
     [HttpGet("posts/{postId:guid}/comments")]
-    public async Task<ActionResult<IReadOnlyList<CommentResponse>>> GetForPost(
+    [AllowAnonymous]
+    public async Task<IActionResult> GetForPost(
         Guid postId,
-        CancellationToken cancellationToken) =>
-        Ok(await commentService.GetForPostAsync(postId, cancellationToken));
+        [FromQuery]int page=1,[FromQuery]int pageSize=20,CancellationToken cancellationToken=default) =>
+        Ok(await commentService.GetForPostAsync(postId,currentUser.IsAuthenticated?currentUser.UserId:null,page,pageSize,cancellationToken));
 
+    [Authorize]
     [HttpPut("comments/{id:guid}")]
     public async Task<ActionResult<CommentResponse>> Update(
         Guid id,
@@ -33,6 +37,7 @@ public sealed class CommentsController(ICommentService commentService, ICurrentU
         CancellationToken cancellationToken) =>
         Ok(await commentService.UpdateAsync(id, currentUser.UserId, request.Content, cancellationToken));
 
+    [Authorize]
     [HttpDelete("comments/{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {

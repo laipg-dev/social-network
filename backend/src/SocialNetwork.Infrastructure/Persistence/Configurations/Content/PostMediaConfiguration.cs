@@ -9,7 +9,8 @@ public class PostMediaConfiguration : IEntityTypeConfiguration<PostMedia>
     public void Configure(EntityTypeBuilder<PostMedia> builder)
     {
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Url).IsRequired();
+        builder.Property(x => x.StorageKey).HasMaxLength(256);
+        builder.Property(x => x.LegacyUrl).HasColumnName("LegacyUrl");
         builder.Property(x => x.MediaType).HasMaxLength(20).IsRequired();
         builder.HasOne(x => x.Post).WithMany(x => x.Media).HasForeignKey(x => x.PostId).OnDelete(DeleteBehavior.Cascade);
     }

@@ -30,15 +30,19 @@ public static class DependencyInjection
     
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
         
-        services.Configure<StorageOptions>(
-            configuration.GetSection(StorageOptions.SectionName));
+        services.AddOptions<StorageOptions>()
+            .Bind(configuration.GetSection(StorageOptions.SectionName))
+            .Validate(x => !string.IsNullOrWhiteSpace(x.RootPath), "Storage:RootPath is required.")
+            .Validate(x => x.SignedUrlExpirationMinutes is >= 1 and <= 1440, "Storage:SignedUrlExpirationMinutes must be between 1 and 1440.")
+            .Validate(x => System.Text.Encoding.UTF8.GetByteCount(x.SigningKey ?? string.Empty) >= 32, "Storage:SigningKey must contain at least 32 UTF-8 bytes.")
+            .ValidateOnStart();
         services.Configure<EmailOptions>(
             configuration.GetSection(EmailOptions.SectionName));
         services.AddHttpClient<IEmailSender, BrevoEmailSender>(client =>
         {
             client.BaseAddress = new Uri("https://api.brevo.com/");
         });
-        services.AddScoped<IFileStorage, LocalFileStorage>();
+        services.AddScoped<IStorageService, LocalFileStorage>();
         services.AddScoped<IAuthService, AuthService>();
         return services;
     }

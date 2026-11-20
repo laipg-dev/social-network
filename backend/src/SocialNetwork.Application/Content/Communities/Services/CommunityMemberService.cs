@@ -38,6 +38,12 @@ public class CommunityMemberService : ICommunityMemberService
             communityId,
             cancellationToken);
 
+        var access = await _authorization.GetAccessAsync(communityId, currentUserId, cancellationToken);
+        if (access.IsBanned)
+        {
+            throw new ForbiddenException("Banned users cannot join or request to join this community.");
+        }
+
         if (!string.Equals(
                 community.Status,
                 CommunityStatus.Active,

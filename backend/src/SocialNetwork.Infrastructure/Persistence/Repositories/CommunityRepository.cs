@@ -40,8 +40,9 @@ public class CommunityRepository : ICommunityRepository
         // là thành viên. Community CLOSED bị ẩn khỏi danh sách khám phá.
         query = query.Where(x =>
             x.Status == CommunityStatus.Active
+            && (currentUserId == Guid.Empty || !_dbContext.CommunityBans.Any(b => b.CommunityId == x.Id && b.UserId == currentUserId && b.RevokedAt == null && (b.ExpiresAt == null || b.ExpiresAt > DateTime.UtcNow)))
             && (x.IsPublic
-                || x.Members.Any(member => member.UserId == currentUserId)));
+                || x.Members.Any(member => member.UserId == currentUserId && (member.Status == CommunityMemberStatus.Active || member.Status == CommunityMemberStatus.Pending))));
 
         if (!string.IsNullOrWhiteSpace(search))
         {

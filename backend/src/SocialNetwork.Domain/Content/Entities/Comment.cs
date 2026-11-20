@@ -17,6 +17,7 @@ public class Comment
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
+    public DateTime? QuarantinedAt { get; set; }
 
     public Post Post { get; set; } = null!;
     public User Author { get; set; } = null!;

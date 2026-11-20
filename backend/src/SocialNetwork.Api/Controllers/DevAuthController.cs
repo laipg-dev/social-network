@@ -9,16 +9,19 @@ namespace SocialNetwork.Api.Controllers;
 public class DevAuthController : ControllerBase
 {
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly IHostEnvironment _environment;
 
-    public DevAuthController(IJwtTokenGenerator jwtTokenGenerator)
+    public DevAuthController(IJwtTokenGenerator jwtTokenGenerator, IHostEnvironment environment)
     {
         _jwtTokenGenerator = jwtTokenGenerator;
+        _environment = environment;
     }
 
     [AllowAnonymous]
 [HttpPost("token")]
 public IActionResult GenerateToken()
 {
+    if (!_environment.IsDevelopment()) return NotFound();
     var userId = Guid.Parse(
         "11111111-1111-1111-1111-111111111111");
 

@@ -4,7 +4,7 @@ public sealed class StorageOptions
 {
     public const string SectionName = "Storage";
 
-    public string RootPath { get; init; } = "uploads";
-
-    public string RequestPath { get; init; } = "/uploads";
+    public string RootPath { get; init; } = "private-storage";
+    public int SignedUrlExpirationMinutes { get; init; } = 15;
+    public string SigningKey { get; init; } = string.Empty;
 }

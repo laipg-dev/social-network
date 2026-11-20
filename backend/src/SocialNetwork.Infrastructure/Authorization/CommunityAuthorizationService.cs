@@ -36,6 +36,10 @@ public class CommunityAuthorizationService : ICommunityAuthorization
             .Select(x => new { x.Status })
             .FirstOrDefaultAsync(cancellationToken);
 
+        var isBanned = await _dbContext.CommunityBans.AsNoTracking().AnyAsync(x =>
+            x.CommunityId == communityId && x.UserId == userId && x.RevokedAt == null
+            && (x.ExpiresAt == null || x.ExpiresAt > DateTime.UtcNow), cancellationToken);
+
         var roles = await _dbContext.CommunityMemberRoles
             .AsNoTracking()
             .Where(x => x.CommunityId == communityId
@@ -51,14 +55,14 @@ public class CommunityAuthorizationService : ICommunityAuthorization
 
         var isOwner = community.OwnerId == userId;
 
-        var isActiveMember = membership is not null
+        var isActiveMember = !isBanned && membership is not null
             && membership.Status == CommunityMemberStatus.Active;
 
-        var hasMembership = membership is not null
+        var hasMembership = !isBanned && membership is not null
             && membership.Status is CommunityMemberStatus.Active
                 or CommunityMemberStatus.Pending;
 
-        if (isOwner)
+        if (isOwner && !isBanned)
         {
             return new CommunityAccess
             {
@@ -77,6 +81,7 @@ public class CommunityAuthorizationService : ICommunityAuthorization
             return new CommunityAccess
             {
                 IsOwner = false,
+                IsBanned = isBanned,
                 HasMembership = hasMembership,
                 IsMember = false,
                 MembershipStatus = membership?.Status,
@@ -96,6 +101,7 @@ public class CommunityAuthorizationService : ICommunityAuthorization
         return new CommunityAccess
         {
             IsOwner = false,
+            IsBanned = false,
             HasMembership = true,
             IsMember = true,
             MembershipStatus = membership!.Status,

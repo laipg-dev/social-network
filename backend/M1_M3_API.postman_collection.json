@@ -1,0 +1,833 @@
+﻿{
+    "info":  {
+                 "_postman_id":  "social-network-m1-m3",
+                 "name":  "Social Network M1-M3 API",
+                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+             },
+    "auth":  {
+                 "type":  "bearer",
+                 "bearer":  [
+                                {
+                                    "key":  "token",
+                                    "value":  "{{AccessToken}}",
+                                    "type":  "string"
+                                }
+                            ]
+             },
+    "item":  [
+                 {
+                     "name":  "Authentication",
+                     "item":  [
+                                  {
+                                      "name":  "Register",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\"username\":\"{{Username}}\",\"email\":\"{{Email}}\",\"password\":\"{{Password}}\"}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  "{{BaseUrl}}/api/auth/register"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Login",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\"email\":\"{{Email}}\",\"password\":\"{{Password}}\"}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  "{{BaseUrl}}/api/auth/login"
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "if (pm.response.code === 200) {",
+                                                                                    "  const body = pm.response.json();",
+                                                                                    "  if (body.accessToken) pm.environment.set(\"AccessToken\", body.accessToken);",
+                                                                                    "  if (body.refreshToken) pm.environment.set(\"RefreshToken\", body.refreshToken);",
+                                                                                    "}"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Refresh",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\"refreshToken\":\"{{RefreshToken}}\"}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  "{{BaseUrl}}/api/auth/refresh"
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "if (pm.response.code === 200) {",
+                                                                                    "  const body = pm.response.json();",
+                                                                                    "  if (body.accessToken) pm.environment.set(\"AccessToken\", body.accessToken);",
+                                                                                    "  if (body.refreshToken) pm.environment.set(\"RefreshToken\", body.refreshToken);",
+                                                                                    "}"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Change password",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\"currentPassword\":\"replace-me\",\"newPassword\":\"replace-me-too\"}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  "{{BaseUrl}}/api/auth/password/change"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Request email verification",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\"email\":\"{{Email}}\"}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  "{{BaseUrl}}/api/auth/email-verification/request"
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "if (pm.response.code === 200) {",
+                                                                                    "  const body = pm.response.json();",
+                                                                                    "  if (body.token) pm.environment.set(\"VerificationCode\", body.token);",
+                                                                                    "}"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Confirm email verification",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\"email\":\"{{Email}}\",\"code\":\"{{VerificationCode}}\"}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  "{{BaseUrl}}/api/auth/email-verification/confirm"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Logout",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\"refreshToken\":\"{{RefreshToken}}\"}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  "{{BaseUrl}}/api/auth/logout"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Users",
+                     "item":  [
+                                  {
+                                      "name":  "Profile",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/users/{{UserId}}/profile"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Search",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/users/search?q=sample\u0026page=1\u0026pageSize=20"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Follow",
+                     "item":  [
+                                  {
+                                      "name":  "Follow user",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "url":  "{{BaseUrl}}/api/users/{{UserId}}/follow"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Unfollow user",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  "{{BaseUrl}}/api/users/{{UserId}}/follow"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Followers",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/users/{{UserId}}/followers?page=1\u0026pageSize=20"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Following",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/users/{{UserId}}/following?page=1\u0026pageSize=20"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Friendship",
+                     "item":  [
+                                  {
+                                      "name":  "Friendship status",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/users/{{UserId}}/friendship-status"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Send request",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "url":  "{{BaseUrl}}/api/users/{{UserId}}/friend-requests"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Friends",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/users/{{UserId}}/friends?page=1\u0026pageSize=20"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Block",
+                     "item":  [
+                                  {
+                                      "name":  "Block user",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "url":  "{{BaseUrl}}/api/users/{{UserId}}/block"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Unblock user",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  "{{BaseUrl}}/api/users/{{UserId}}/block"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Blocked users",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/users/me/blocked?page=1\u0026pageSize=20"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Communities",
+                     "item":  [
+                                  {
+                                      "name":  "List communities",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/communities?page=1\u0026pageSize=20"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Community details",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/communities/{{CommunityId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Create community",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  "{{BaseUrl}}/api/communities"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Membership",
+                     "item":  [
+                                  {
+                                      "name":  "Join community",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "url":  "{{BaseUrl}}/api/communities/{{CommunityId}}/members/join"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "My membership",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/communities/{{CommunityId}}/members/me"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Leave or cancel request",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  "{{BaseUrl}}/api/communities/{{CommunityId}}/members/me"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Join Requests",
+                     "item":  [
+                                  {
+                                      "name":  "Approve request",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "url":  "{{BaseUrl}}/api/communities/{{CommunityId}}/members/{{UserId}}/approve"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Reject request",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "url":  "{{BaseUrl}}/api/communities/{{CommunityId}}/members/{{UserId}}/reject"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Ban",
+                     "item":  [
+                                  {
+                                      "name":  "Ban member",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\"reason\":\"policy violation\",\"expiresAt\":null}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  "{{BaseUrl}}/api/communities/{{CommunityId}}/bans/{{UserId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Unban member",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  "{{BaseUrl}}/api/communities/{{CommunityId}}/bans/{{UserId}}"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Posts",
+                     "item":  [
+                                  {
+                                      "name":  "Create text post",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\"content\":\"Hello\",\"visibility\":\"PUBLIC\"}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  "{{BaseUrl}}/api/posts/create"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Create post with images",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "body":  {
+                                                                   "mode":  "formdata",
+                                                                   "formdata":  [
+                                                                                    {
+                                                                                        "key":  "Content",
+                                                                                        "value":  "Hello",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "Visibility",
+                                                                                        "value":  "PUBLIC",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "Images",
+                                                                                        "type":  "file",
+                                                                                        "src":  [
+
+                                                                                                ]
+                                                                                    }
+                                                                                ]
+                                                               },
+                                                      "url":  "{{BaseUrl}}/api/posts"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Post details",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/posts/{{PostId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Update post",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\"content\":\"Updated\",\"visibility\":\"PUBLIC\"}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  "{{BaseUrl}}/api/posts/{{PostId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Delete post",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  "{{BaseUrl}}/api/posts/{{PostId}}"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Visibility",
+                     "item":  [
+                                  {
+                                      "name":  "Public feed",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/posts?page=1\u0026pageSize=20"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Posts by user",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/posts/users/{{UserId}}?page=1\u0026pageSize=20"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Feed",
+                     "item":  [
+                                  {
+                                      "name":  "Community feed",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/posts?communityId={{CommunityId}}\u0026page=1\u0026pageSize=20"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Search",
+                     "item":  [
+                                  {
+                                      "name":  "Search posts",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/posts/search?q=sample\u0026page=1\u0026pageSize=20"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Comments",
+                     "item":  [
+                                  {
+                                      "name":  "List comments",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/posts/{{PostId}}/comments?page=1\u0026pageSize=20"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Create comment",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\"content\":\"Comment\"}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  "{{BaseUrl}}/api/posts/{{PostId}}/comments"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Reply to comment",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\"content\":\"Reply\",\"parentCommentId\":\"{{CommentId}}\"}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  "{{BaseUrl}}/api/posts/{{PostId}}/comments"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Update comment or reply",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\"content\":\"Updated comment\"}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  "{{BaseUrl}}/api/comments/{{CommentId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Delete comment or reply",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  "{{BaseUrl}}/api/comments/{{CommentId}}"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Reactions",
+                     "item":  [
+                                  {
+                                      "name":  "Set post reaction",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\"type\":\"LIKE\"}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  "{{BaseUrl}}/api/posts/{{PostId}}/reaction"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Bookmarks",
+                     "item":  [
+                                  {
+                                      "name":  "Bookmarks list",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/bookmarks?page=1\u0026pageSize=20"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Bookmark post",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "url":  "{{BaseUrl}}/api/posts/{{PostId}}/bookmark"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Media",
+                     "item":  [
+                                  {
+                                      "name":  "List post media",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/posts/{{PostId}}/media"
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "if (pm.response.code === 200) {",
+                                                                                    "  const media = pm.response.json();",
+                                                                                    "  if (Array.isArray(media) \u0026\u0026 media.length \u0026\u0026 media[0].url) pm.environment.set(\"SignedMediaUrl\", media[0].url);",
+                                                                                    "}"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Add post media",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "body":  {
+                                                                   "mode":  "formdata",
+                                                                   "formdata":  [
+                                                                                    {
+                                                                                        "key":  "file",
+                                                                                        "type":  "file",
+                                                                                        "src":  [
+                                                                                                    ""
+                                                                                                ]
+                                                                                    }
+                                                                                ]
+                                                               },
+                                                      "url":  "{{BaseUrl}}/api/posts/{{PostId}}/media"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get media access",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/posts/{{PostId}}/media/{{MediaId}}/access"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Download signed media",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{SignedMediaUrl}}",
+                                                      "auth":  {
+                                                                   "type":  "noauth"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Delete post media",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  "{{BaseUrl}}/api/posts/{{PostId}}/media/{{MediaId}}"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Moderation",
+                     "item":  [
+                                  {
+                                      "name":  "Quarantined posts",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/communities/{{CommunityId}}/moderation/quarantined-posts?page=1\u0026pageSize=20"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Restore quarantined post",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "url":  "{{BaseUrl}}/api/communities/{{CommunityId}}/moderation/quarantined-posts/{{PostId}}/restore"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Quarantined comments and replies",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/communities/{{CommunityId}}/moderation/quarantined-comments?page=1\u0026pageSize=50"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Restore quarantined comment or reply",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "url":  "{{BaseUrl}}/api/communities/{{CommunityId}}/moderation/quarantined-comments/{{CommentId}}/restore"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Community Roles",
+                     "item":  [
+                                  {
+                                      "name":  "List community roles",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/communities/{{CommunityId}}/roles"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "List permission catalog",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{BaseUrl}}/api/permissions"
+                                                  }
+                                  }
+                              ]
+                 }
+             ]
+}

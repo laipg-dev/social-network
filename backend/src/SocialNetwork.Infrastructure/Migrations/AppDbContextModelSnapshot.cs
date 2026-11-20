@@ -332,6 +332,9 @@ namespace SocialNetwork.Infrastructure.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("QuarantinedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid?>("ParentCommentId")
                         .HasColumnType("uuid");
 
@@ -402,6 +405,9 @@ namespace SocialNetwork.Infrastructure.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("QuarantinedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -444,9 +450,12 @@ namespace SocialNetwork.Infrastructure.Migrations
                     b.Property<Guid>("PostId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Url")
-                        .IsRequired()
+                    b.Property<string>("LegacyUrl")
                         .HasColumnType("text");
+
+                    b.Property<string>("StorageKey")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
 

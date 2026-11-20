@@ -4,11 +4,13 @@ using SocialNetwork.Application.Content.Comments.Interfaces;
 using SocialNetwork.Application.Content.Comments.Requests;
 using SocialNetwork.Application.Content.Comments.Responses;
 using SocialNetwork.Domain.Content.Entities;
+using SocialNetwork.Application.Content.Posts.Interfaces;
+using SocialNetwork.Application.Common.Responses;
 using SocialNetwork.Infrastructure.Persistence;
 
 namespace SocialNetwork.Infrastructure.Content.Comments;
 
-public sealed class CommentService(AppDbContext dbContext) : ICommentService
+public sealed class CommentService(AppDbContext dbContext, IPostAccessService postAccess) : ICommentService
 {
     public async Task<CommentResponse> CreateAsync(
         Guid postId,
@@ -16,14 +18,13 @@ public sealed class CommentService(AppDbContext dbContext) : ICommentService
         CreateCommentRequest request,
         CancellationToken cancellationToken)
     {
-        if (!await dbContext.Posts.AnyAsync(post => post.Id == postId && post.Status == "ACTIVE", cancellationToken))
-            throw new NotFoundException("Post", postId);
+        await postAccess.EnsureCanViewAsync(postId,authorId,cancellationToken);
 
         if (request.ParentCommentId is not null &&
             !await dbContext.Comments.AnyAsync(comment =>
                 comment.Id == request.ParentCommentId &&
                 comment.PostId == postId &&
-                comment.Status == "ACTIVE", cancellationToken))
+                comment.Status == "ACTIVE" && comment.QuarantinedAt == null, cancellationToken))
             throw new NotFoundException("Parent comment", request.ParentCommentId);
 
         var comment = new Comment
@@ -38,24 +39,26 @@ public sealed class CommentService(AppDbContext dbContext) : ICommentService
         return Map(comment, []);
     }
 
-    public async Task<IReadOnlyList<CommentResponse>> GetForPostAsync(
-        Guid postId,
-        CancellationToken cancellationToken)
+    public async Task<PagedResponse<CommentResponse>> GetForPostAsync(Guid postId,Guid? viewerId,int page,int pageSize,CancellationToken cancellationToken)
     {
+        await postAccess.EnsureCanViewAsync(postId,viewerId,cancellationToken);
+        page=Math.Max(page,1);pageSize=Math.Clamp(pageSize,1,100);
+        var query=dbContext.Comments.AsNoTracking().Where(comment=>comment.PostId==postId&&comment.Status=="ACTIVE"&&comment.QuarantinedAt==null&&comment.ParentCommentId==null);
+        var total=await query.CountAsync(cancellationToken);
+        var roots = await query
+            .OrderBy(comment=>comment.CreatedAt).ThenBy(comment=>comment.Id)
+            .Skip((page-1)*pageSize).Take(pageSize).ToListAsync(cancellationToken);
         var comments = await dbContext.Comments
             .AsNoTracking()
-            .Where(comment => comment.PostId == postId && comment.Status == "ACTIVE")
-            .OrderBy(comment => comment.CreatedAt)
+            .Where(comment => comment.PostId == postId && comment.Status == "ACTIVE" && comment.QuarantinedAt == null)
+            .OrderBy(comment => comment.CreatedAt).ThenBy(comment=>comment.Id)
             .ToListAsync(cancellationToken);
 
         var byParent = comments
             .Where(comment => comment.ParentCommentId is not null)
             .GroupBy(comment => comment.ParentCommentId!.Value)
             .ToDictionary(group => group.Key, group => group.ToList());
-        return comments
-            .Where(comment => comment.ParentCommentId is null)
-            .Select(comment => Map(comment, BuildReplies(comment.Id, byParent)))
-            .ToList();
+        return new PagedResponse<CommentResponse>{Items=roots.Select(comment=>Map(comment,BuildReplies(comment.Id,byParent))).ToArray(),Page=page,PageSize=pageSize,TotalCount=total};
     }
 
     public async Task<CommentResponse> UpdateAsync(
@@ -65,9 +68,10 @@ public sealed class CommentService(AppDbContext dbContext) : ICommentService
         CancellationToken cancellationToken)
     {
         var comment = await dbContext.Comments
-            .SingleOrDefaultAsync(item => item.Id == id && item.Status == "ACTIVE", cancellationToken)
+            .SingleOrDefaultAsync(item => item.Id == id && item.Status == "ACTIVE" && item.QuarantinedAt == null, cancellationToken)
             ?? throw new NotFoundException("Comment", id);
         EnsureAuthor(comment, authorId);
+        await postAccess.EnsureCanViewAsync(comment.PostId,authorId,cancellationToken);
         comment.Content = content.Trim();
         comment.UpdatedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -77,9 +81,10 @@ public sealed class CommentService(AppDbContext dbContext) : ICommentService
     public async Task DeleteAsync(Guid id, Guid authorId, CancellationToken cancellationToken)
     {
         var comment = await dbContext.Comments
-            .SingleOrDefaultAsync(item => item.Id == id && item.Status == "ACTIVE", cancellationToken)
+            .SingleOrDefaultAsync(item => item.Id == id && item.Status == "ACTIVE" && item.QuarantinedAt == null, cancellationToken)
             ?? throw new NotFoundException("Comment", id);
         EnsureAuthor(comment, authorId);
+        await postAccess.EnsureCanViewAsync(comment.PostId,authorId,cancellationToken);
         comment.Status = "DELETED";
         comment.DeletedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);

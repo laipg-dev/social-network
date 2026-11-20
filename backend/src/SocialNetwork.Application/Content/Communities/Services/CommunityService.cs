@@ -130,6 +130,11 @@ public class CommunityService : ICommunityService
             currentUserId,
             cancellationToken);
 
+        if (access.IsBanned)
+        {
+            throw new NotFoundException("Community", communityId);
+        }
+
         // Cộng đồng private chỉ hiển thị với người có membership
         // (kể cả PENDING để FE hiển thị trạng thái chờ duyệt).
         if (!community.IsPublic && !access.HasMembership)

@@ -19,6 +19,8 @@ public class Post
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
+    // Set when this post is hidden as part of a community ban. Cleared only by moderation restore.
+    public DateTime? QuarantinedAt { get; set; }
 
     // Navigation
     public User Author { get; set; } = null!;
