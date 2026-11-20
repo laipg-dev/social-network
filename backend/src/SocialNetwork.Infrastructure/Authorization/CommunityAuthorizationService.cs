@@ -302,7 +302,8 @@ public class CommunityAuthorizationService : ICommunityAuthorization
         bool isRoomMember,
         IReadOnlyList<RoomPermissionOverride> overrides)
     {
-        // Người không thuộc Community không được truy cập Room.
+        // Người không phải thành viên Active của Community
+        // không được truy cập Room.
         if (!communityAccess.IsMember)
         {
             return new RoomAccess
@@ -318,21 +319,26 @@ public class CommunityAuthorizationService : ICommunityAuthorization
             return new RoomAccess
             {
                 CanView = true,
-                IsRoomMember = isRoomMember,
+                IsRoomMember = !isPublic && isRoomMember,
                 Permissions = CommunityPermissions.All
             };
         }
 
-        // Lấy các permission từ Role của thành viên Community.
+        // RoomMember chỉ có ý nghĩa đối với Private Room.
+        // Các RoomMember row cũ của Public Room không còn
+        // được xem là access grant.
+        var hasPrivateAccessGrant = !isPublic && isRoomMember;
+
+        // Lấy quyền từ Role của thành viên Community.
         var permissions = new HashSet<string>(
             communityAccess.Permissions,
             StringComparer.Ordinal);
 
-        // Áp dụng Room Permission Override.
+        // Chỉ áp dụng Override cho quyền hoạt động trong Room.
         // Deny luôn ưu tiên hơn Allow.
-        foreach (var group in overrides.GroupBy(
-            x => x.Code,
-            StringComparer.Ordinal))
+        foreach (var group in overrides
+            .Where(x => RoomPermissions.Overridable.Contains(x.Code))
+            .GroupBy(x => x.Code, StringComparer.Ordinal))
         {
             if (group.Any(x => !x.IsAllowed))
             {
@@ -344,20 +350,23 @@ public class CommunityAuthorizationService : ICommunityAuthorization
             }
         }
 
-        // PUBLIC:
-        // Thành viên Community được truy cập.
+        // Public Room:
+        // Mọi thành viên Active của Community được truy cập.
         //
-        // PRIVATE:
-        // Chỉ Room Member hoặc người có ROOM_VIEW / ROOM_MANAGE.
+        // Private Room:
+        // Người được cấp access grant hoặc người có quyền
+        // quản lý Room / quản lý quyền truy cập.
         var canView = isPublic
-            || isRoomMember
-            || permissions.Contains(CommunityPermissions.RoomView)
-            || permissions.Contains(CommunityPermissions.RoomManage);
+            || hasPrivateAccessGrant
+            || communityAccess.Permissions.Contains(
+                CommunityPermissions.RoomManage)
+            || communityAccess.Permissions.Contains(
+                CommunityPermissions.RoomMemberManage);
 
         return new RoomAccess
         {
             CanView = canView,
-            IsRoomMember = isRoomMember,
+            IsRoomMember = hasPrivateAccessGrant,
             Permissions = permissions.ToArray()
         };
     }

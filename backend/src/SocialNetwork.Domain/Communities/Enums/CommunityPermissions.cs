@@ -2,48 +2,80 @@ namespace SocialNetwork.Domain.Communities.Enums;
 
 public static class CommunityPermissions
 {
-    public const string CommunityView = "COMMUNITY_VIEW";
+    // =========================
+    // COMMUNITY
+    // =========================
+
     public const string CommunityEdit = "COMMUNITY_EDIT";
     public const string CommunityDelete = "COMMUNITY_DELETE";
-    public const string CommunityClose = "COMMUNITY_CLOSE";
 
-    public const string MemberView = "MEMBER_VIEW";
-    public const string MemberManage = "MEMBER_MANAGE";
+    // =========================
+    // COMMUNITY MEMBER
+    // =========================
 
-    public const string RoleView = "ROLE_VIEW";
-    public const string RoleManage = "ROLE_MANAGE";
+    public const string CommunityMemberView = "COMMUNITY_MEMBER_VIEW";
+    public const string CommunityMemberManage = "COMMUNITY_MEMBER_MANAGE";
 
-    public const string RoomView = "ROOM_VIEW";
+    // =========================
+    // COMMUNITY ROLE
+    // =========================
+
+    public const string CommunityRoleView = "COMMUNITY_ROLE_VIEW";
+    public const string CommunityRoleManage = "COMMUNITY_ROLE_MANAGE";
+
+    // =========================
+    // ROOM MANAGEMENT
+    // =========================
+
     public const string RoomCreate = "ROOM_CREATE";
-    public const string RoomEdit = "ROOM_EDIT";
-    public const string RoomClose = "ROOM_CLOSE";
-    public const string RoomDelete = "ROOM_DELETE";
     public const string RoomManage = "ROOM_MANAGE";
+    public const string RoomDelete = "ROOM_DELETE";
+    public const string RoomAccessManage = "ROOM_ACCESS_MANAGE";
+
+    // =========================
+    // ROOM ACTIVITIES
+    // =========================
+
+    public const string MessageSend = "MESSAGE_SEND";
+    public const string MessageDeleteOwn = "MESSAGE_DELETE_OWN";
+    public const string MessageDeleteAny = "MESSAGE_DELETE_ANY";
+    public const string MessagePin = "MESSAGE_PIN";
+
     public const string RoomMemberView = "ROOM_MEMBER_VIEW";
     public const string RoomMemberManage = "ROOM_MEMBER_MANAGE";
 
-    public const string MessageSend = "MESSAGE_SEND";
-    public const string MessageDelete = "MESSAGE_DELETE";
+    public const string CallMuteMember = "CALL_MUTE_MEMBER";
+    public const string CallRemoveMember = "CALL_REMOVE_MEMBER";
+
+    // =========================
+    // ALL PERMISSIONS
+    // =========================
 
     public static readonly IReadOnlyList<string> All =
     [
-        CommunityView,
         CommunityEdit,
         CommunityDelete,
-        CommunityClose,
-        MemberView,
-        MemberManage,
-        RoleView,
-        RoleManage,
-        RoomView,
+
+        CommunityMemberView,
+        CommunityMemberManage,
+
+        CommunityRoleView,
+        CommunityRoleManage,
+
         RoomCreate,
-        RoomEdit,
-        RoomClose,
-        RoomDelete,
         RoomManage,
+        RoomDelete,
+        RoomAccessManage,
+
+        MessageSend,
+        MessageDeleteOwn,
+        MessageDeleteAny,
+        MessagePin,
+
         RoomMemberView,
         RoomMemberManage,
-        MessageSend,
-        MessageDelete
+
+        CallMuteMember,
+        CallRemoveMember
     ];
 }

@@ -3,7 +3,6 @@ using SocialNetwork.Application.Content.Communities.Interfaces;
 using SocialNetwork.Application.Content.Communities.Requests;
 using SocialNetwork.Application.Content.Communities.Responses;
 using SocialNetwork.Domain.Communities.Entities;
-using SocialNetwork.Domain.Communities.Enums;
 
 namespace SocialNetwork.Application.Content.Communities.Services;
 
@@ -29,121 +28,30 @@ public class RoomMemberService : IRoomMemberService
         Guid roomId,
         CancellationToken cancellationToken = default)
     {
-        await _authorization.RequireRoomPermissionAsync(
-            roomId,
-            currentUserId,
-            CommunityPermissions.RoomMemberView,
-            cancellationToken);
-
-        var members = await _roomMemberRepository.GetByRoomAsync(
-            roomId,
-            cancellationToken);
-
-        return members.Select(ToResponse).ToArray();
-    }
-
-    public async Task<RoomMemberResponse> GetMeAsync(
-        Guid currentUserId,
-        Guid communityId,
-        Guid roomId,
-        CancellationToken cancellationToken = default)
-    {
-        await _authorization.RequireRoomPermissionAsync(
-            roomId,
-            currentUserId,
-            CommunityPermissions.RoomMemberView,
-            cancellationToken);
-
-        var member = await _roomMemberRepository.GetAsync(
-            roomId,
-            currentUserId,
-            cancellationToken)
-            ?? throw new NotFoundException("RoomMember", currentUserId);
-
-        return ToResponse(member);
-    }
-
-    public async Task<RoomMemberResponse> JoinAsync(
-        Guid currentUserId,
-        Guid communityId,
-        Guid roomId,
-        CancellationToken cancellationToken = default)
-    {
         var room = await GetRoomAsync(
             communityId,
             roomId,
             cancellationToken);
 
-        var access = await _authorization.RequireRoomPermissionAsync(
-            roomId,
+        await _authorization.RequireCommunityPermissionAsync(
+            communityId,
             currentUserId,
-            CommunityPermissions.RoomView,
+            Domain.Communities.Enums.CommunityPermissions.RoomMemberView,
             cancellationToken);
 
-        if (!string.Equals(
-                room.Status,
-                RoomStatus.Active,
-                StringComparison.Ordinal))
+        // Public Room không cần access grant.
+        if (room.IsPublic)
         {
-            throw new BusinessRuleException(
-                "This room is closed and does not accept new members.");
+            return [];
         }
 
-        if (access.IsRoomMember)
-        {
-            throw new ConflictException(
-                "You are already a member of this room.");
-        }
-
-        if (!room.IsPublic
-            && !access.Permissions.Contains(
-                CommunityPermissions.RoomMemberManage))
-        {
-            throw new ForbiddenException(
-                "This room is private. Ask a moderator to add you.");
-        }
-
-        await _roomMemberRepository.AddAsync(
-            new RoomMember
-            {
-                RoomId = roomId,
-                UserId = currentUserId,
-                JoinedAt = DateTime.UtcNow
-            },
+        var members = await _roomMemberRepository.GetByRoomAsync(
+            roomId,
             cancellationToken);
 
-        var created = await _roomMemberRepository.GetAsync(
-            roomId,
-            currentUserId,
-            cancellationToken)
-            ?? throw new NotFoundException("RoomMember", currentUserId);
-
-        return ToResponse(created);
-    }
-
-    public async Task LeaveAsync(
-        Guid currentUserId,
-        Guid communityId,
-        Guid roomId,
-        CancellationToken cancellationToken = default)
-    {
-        await GetRoomAsync(communityId, roomId, cancellationToken);
-
-        await _authorization.RequireRoomPermissionAsync(
-            roomId,
-            currentUserId,
-            CommunityPermissions.RoomView,
-            cancellationToken);
-
-        var member = await _roomMemberRepository.GetAsync(
-            roomId,
-            currentUserId,
-            cancellationToken)
-            ?? throw new NotFoundException("RoomMember", currentUserId);
-
-        await _roomMemberRepository.RemoveAsync(
-            member,
-            cancellationToken);
+        return members
+            .Select(ToResponse)
+            .ToArray();
     }
 
     public async Task<RoomMemberResponse> AddAsync(
@@ -158,14 +66,20 @@ public class RoomMemberService : IRoomMemberService
             roomId,
             cancellationToken);
 
-        await _authorization.RequireRoomPermissionAsync(
-            roomId,
+        await _authorization.RequireCommunityPermissionAsync(
+            communityId,
             currentUserId,
-            CommunityPermissions.RoomMemberManage,
+            Domain.Communities.Enums.CommunityPermissions.RoomMemberManage,
             cancellationToken);
 
+        if (room.IsPublic)
+        {
+            throw new BusinessRuleException(
+                "Public rooms do not require access grants.");
+        }
+
         var targetAccess = await _authorization.GetAccessAsync(
-            room.CommunityId,
+            communityId,
             request.UserId,
             cancellationToken);
 
@@ -183,7 +97,7 @@ public class RoomMemberService : IRoomMemberService
         if (existing is not null)
         {
             throw new ConflictException(
-                "The user is already a member of this room.");
+                "The user already has access to this room.");
         }
 
         await _roomMemberRepository.AddAsync(
@@ -199,7 +113,9 @@ public class RoomMemberService : IRoomMemberService
             roomId,
             request.UserId,
             cancellationToken)
-            ?? throw new NotFoundException("RoomMember", request.UserId);
+            ?? throw new NotFoundException(
+                "RoomMember",
+                request.UserId);
 
         return ToResponse(created);
     }
@@ -211,19 +127,30 @@ public class RoomMemberService : IRoomMemberService
         Guid userId,
         CancellationToken cancellationToken = default)
     {
-        await GetRoomAsync(communityId, roomId, cancellationToken);
-
-        await _authorization.RequireRoomPermissionAsync(
+        var room = await GetRoomAsync(
+            communityId,
             roomId,
-            currentUserId,
-            CommunityPermissions.RoomMemberManage,
             cancellationToken);
+
+        await _authorization.RequireCommunityPermissionAsync(
+            communityId,
+            currentUserId,
+            Domain.Communities.Enums.CommunityPermissions.RoomMemberManage,
+            cancellationToken);
+
+        if (room.IsPublic)
+        {
+            throw new BusinessRuleException(
+                "Public rooms do not require access grants.");
+        }
 
         var member = await _roomMemberRepository.GetAsync(
             roomId,
             userId,
             cancellationToken)
-            ?? throw new NotFoundException("RoomMember", userId);
+            ?? throw new NotFoundException(
+                "RoomMember",
+                userId);
 
         await _roomMemberRepository.RemoveAsync(
             member,
@@ -239,10 +166,13 @@ public class RoomMemberService : IRoomMemberService
             communityId,
             roomId,
             cancellationToken)
-            ?? throw new NotFoundException("Room", roomId);
+            ?? throw new NotFoundException(
+                "Room",
+                roomId);
     }
 
-    private static RoomMemberResponse ToResponse(RoomMember member)
+    private static RoomMemberResponse ToResponse(
+        RoomMember member)
     {
         return new RoomMemberResponse
         {

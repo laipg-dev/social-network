@@ -38,8 +38,8 @@ public class RoomPermissionService : IRoomPermissionService
     {
         await EnsureRoomAsync(communityId, roomId, cancellationToken);
 
-        await _authorization.RequireRoomPermissionAsync(
-            roomId,
+        await _authorization.RequireCommunityPermissionAsync(
+            communityId,
             currentUserId,
             CommunityPermissions.RoomManage,
             cancellationToken);
@@ -49,6 +49,8 @@ public class RoomPermissionService : IRoomPermissionService
             cancellationToken);
 
         return overrides
+            .Where(x => RoomPermissions.Overridable.Contains(
+                x.Permission.Code))
             .Select(x => new RoomPermissionOverrideResponse
             {
                 RoleId = x.RoleId,
@@ -71,8 +73,8 @@ public class RoomPermissionService : IRoomPermissionService
     {
         await EnsureRoomAsync(communityId, roomId, cancellationToken);
 
-        await _authorization.RequireRoomPermissionAsync(
-            roomId,
+        await _authorization.RequireCommunityPermissionAsync(
+            communityId,
             currentUserId,
             CommunityPermissions.RoomManage,
             cancellationToken);
@@ -198,8 +200,8 @@ public class RoomPermissionService : IRoomPermissionService
     {
         await EnsureRoomAsync(communityId, roomId, cancellationToken);
 
-        await _authorization.RequireRoomPermissionAsync(
-            roomId,
+        await _authorization.RequireCommunityPermissionAsync(
+            communityId,
             currentUserId,
             CommunityPermissions.RoomManage,
             cancellationToken);
@@ -223,6 +225,18 @@ public class RoomPermissionService : IRoomPermissionService
 
         var normalized = code?.Trim().ToUpperInvariant()
             ?? string.Empty;
+
+        if (!RoomPermissions.Overridable.Contains(normalized))
+        {
+            throw new ValidationException(
+                new Dictionary<string, string[]>
+                {
+                    ["code"] =
+                    [
+                        $"Permission '{normalized}' cannot be overridden at room level."
+                    ]
+                });
+        }
 
         var permissions = await _permissionRepository.GetByCodesAsync(
             [normalized],

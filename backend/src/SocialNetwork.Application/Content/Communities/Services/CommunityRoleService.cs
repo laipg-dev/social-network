@@ -40,7 +40,7 @@ public class CommunityRoleService : ICommunityRoleService
         await _authorization.RequireCommunityPermissionAsync(
             communityId,
             currentUserId,
-            CommunityPermissions.RoleView,
+            CommunityPermissions.CommunityRoleView,
             cancellationToken);
 
         var roles = await _roleRepository.GetByCommunityAsync(
@@ -68,7 +68,7 @@ public class CommunityRoleService : ICommunityRoleService
         await _authorization.RequireCommunityPermissionAsync(
             communityId,
             currentUserId,
-            CommunityPermissions.RoleView,
+            CommunityPermissions.CommunityRoleView,
             cancellationToken);
 
         var role = await GetRoleAsync(
@@ -94,7 +94,7 @@ public class CommunityRoleService : ICommunityRoleService
         var access = await _authorization.RequireCommunityPermissionAsync(
             communityId,
             currentUserId,
-            CommunityPermissions.RoleManage,
+            CommunityPermissions.CommunityRoleManage,
             cancellationToken);
 
         var name = NormalizeName(request.Name);
@@ -135,7 +135,7 @@ public class CommunityRoleService : ICommunityRoleService
         var access = await _authorization.RequireCommunityPermissionAsync(
             communityId,
             currentUserId,
-            CommunityPermissions.RoleManage,
+            CommunityPermissions.CommunityRoleManage,
             cancellationToken);
 
         var role = await GetRoleAsync(
@@ -183,7 +183,7 @@ public class CommunityRoleService : ICommunityRoleService
         var access = await _authorization.RequireCommunityPermissionAsync(
             communityId,
             currentUserId,
-            CommunityPermissions.RoleManage,
+            CommunityPermissions.CommunityRoleManage,
             cancellationToken);
 
         var role = await GetRoleAsync(
@@ -261,7 +261,7 @@ public class CommunityRoleService : ICommunityRoleService
         var access = await _authorization.RequireCommunityPermissionAsync(
             communityId,
             currentUserId,
-            CommunityPermissions.RoleManage,
+            CommunityPermissions.CommunityRoleManage,
             cancellationToken);
 
         var role = await GetRoleAsync(
@@ -295,7 +295,7 @@ public class CommunityRoleService : ICommunityRoleService
         var access = await _authorization.RequireCommunityPermissionAsync(
             communityId,
             currentUserId,
-            CommunityPermissions.RoleManage,
+            CommunityPermissions.CommunityRoleManage,
             cancellationToken);
 
         var roles = await _roleRepository.GetByCommunityAsync(
@@ -369,7 +369,7 @@ public class CommunityRoleService : ICommunityRoleService
         await _authorization.RequireCommunityPermissionAsync(
             communityId,
             currentUserId,
-            CommunityPermissions.RoleView,
+            CommunityPermissions.CommunityRoleView,
             cancellationToken);
 
         var role = await GetRoleAsync(
@@ -390,7 +390,7 @@ public class CommunityRoleService : ICommunityRoleService
         var access = await _authorization.RequireCommunityPermissionAsync(
             communityId,
             currentUserId,
-            CommunityPermissions.RoleManage,
+            CommunityPermissions.CommunityRoleManage,
             cancellationToken);
 
         var role = await GetRoleAsync(
@@ -477,7 +477,7 @@ public class CommunityRoleService : ICommunityRoleService
         var access = await _authorization.RequireCommunityPermissionAsync(
             communityId,
             currentUserId,
-            CommunityPermissions.RoleManage,
+            CommunityPermissions.CommunityRoleManage,
             cancellationToken);
 
         var community = await _communityRepository.GetByIdAsync(

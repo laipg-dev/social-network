@@ -25,15 +25,20 @@ public class RoomService : IRoomService
     }
 
     public async Task<IReadOnlyList<RoomResponse>> GetRoomsAsync(
-        Guid currentUserId,
-        Guid communityId,
-        CancellationToken cancellationToken = default)
+    Guid currentUserId,
+    Guid communityId,
+    CancellationToken cancellationToken = default)
     {
-        await _authorization.RequireCommunityPermissionAsync(
+        var communityAccess = await _authorization.GetAccessAsync(
             communityId,
             currentUserId,
-            CommunityPermissions.RoomView,
             cancellationToken);
+
+        if (!communityAccess.IsMember)
+        {
+            throw new ForbiddenException(
+                "You are not a member of this community.");
+        }
 
         var rooms = await _roomRepository.GetByCommunityAsync(
             communityId,
@@ -56,7 +61,11 @@ public class RoomService : IRoomService
             .ThenBy(room => room.Name, StringComparer.Ordinal)
             .Select(room => ToResponse(
                 room,
-                counts.TryGetValue(room.Id, out var count) ? count : 0,
+                room.IsPublic
+                    ? 0
+                    : counts.TryGetValue(room.Id, out var count)
+                        ? count
+                        : 0,
                 accesses[room.Id]))
             .ToArray();
     }
@@ -88,7 +97,10 @@ public class RoomService : IRoomService
             roomId,
             cancellationToken);
 
-        return ToResponse(room, memberCount, access);
+        return ToResponse(
+            room,
+            room.IsPublic ? 0 : memberCount,
+            access);
     }
 
     public async Task<RoomResponse> CreateAsync(
@@ -149,26 +161,30 @@ public class RoomService : IRoomService
         };
 
         // Mọi room đều có RoomMember row; creator được thêm ngay.
-        room.Members.Add(new RoomMember
+        // Chỉ Private Room mới cần access grant.
+        // Public Room mặc định cho phép thành viên Community truy cập.
+        if (!room.IsPublic)
         {
-            RoomId = room.Id,
-            UserId = currentUserId,
-            JoinedAt = DateTime.UtcNow
-        });
+            room.Members.Add(new RoomMember
+            {
+                RoomId = room.Id,
+                UserId = currentUserId,
+                JoinedAt = DateTime.UtcNow
+            });
+        }
 
         await _roomRepository.AddAsync(room, cancellationToken);
 
         return ToResponse(
             room,
-            memberCount: 1,
+            memberCount: room.IsPublic ? 0 : 1,
             new RoomAccess
             {
                 CanView = true,
-                IsRoomMember = true,
+                IsRoomMember = !room.IsPublic,
                 Permissions = access.Permissions
             });
     }
-
     public async Task<RoomResponse> UpdateAsync(
         Guid currentUserId,
         Guid communityId,
@@ -184,7 +200,7 @@ public class RoomService : IRoomService
         var access = await _authorization.RequireRoomPermissionAsync(
             roomId,
             currentUserId,
-            CommunityPermissions.RoomEdit,
+            CommunityPermissions.RoomManage,
             cancellationToken);
 
         var name = NormalizeName(request.Name);
@@ -213,7 +229,10 @@ public class RoomService : IRoomService
             roomId,
             cancellationToken);
 
-        return ToResponse(room, memberCount, access);
+        return ToResponse(
+            room,
+            room.IsPublic ? 0 : memberCount,
+            access);
     }
 
     public async Task<RoomResponse> UpdateStatusAsync(
@@ -231,10 +250,10 @@ public class RoomService : IRoomService
             cancellationToken);
 
         var access = await _authorization.RequireRoomPermissionAsync(
-            roomId,
-            currentUserId,
-            CommunityPermissions.RoomClose,
-            cancellationToken);
+             roomId,
+             currentUserId,
+             CommunityPermissions.RoomManage,
+             cancellationToken);
 
         if (!string.Equals(
                 room.Status,
@@ -251,7 +270,10 @@ public class RoomService : IRoomService
             roomId,
             cancellationToken);
 
-        return ToResponse(room, memberCount, access);
+        return ToResponse(
+            room,
+            room.IsPublic ? 0 : memberCount,
+            access);
     }
 
     public async Task DeleteAsync(
@@ -265,13 +287,32 @@ public class RoomService : IRoomService
             roomId,
             cancellationToken);
 
-        await _authorization.RequireRoomPermissionAsync(
-            roomId,
+        var access = await _authorization.GetAccessAsync(
+            communityId,
             currentUserId,
-            CommunityPermissions.RoomDelete,
             cancellationToken);
 
-        await _roomRepository.DeleteAsync(room, cancellationToken);
+        if (!access.IsMember)
+        {
+            throw new ForbiddenException(
+                "You are not a member of this community.");
+        }
+
+        // Owner hoặc người có ROOM_MANAGE / ROOM_DELETE
+        // được phép xóa Room.
+        if (!access.IsOwner
+            && !access.Permissions.Contains(
+                CommunityPermissions.RoomManage)
+            && !access.Permissions.Contains(
+                CommunityPermissions.RoomDelete))
+        {
+            throw new ForbiddenException(
+                "You do not have permission to delete this room.");
+        }
+
+        await _roomRepository.DeleteAsync(
+            room,
+            cancellationToken);
     }
 
     public async Task<IReadOnlyList<RoomResponse>> ReorderAsync(
@@ -340,7 +381,11 @@ public class RoomService : IRoomService
             .ThenBy(room => room.Name, StringComparer.Ordinal)
             .Select(room => ToResponse(
                 room,
-                counts.TryGetValue(room.Id, out var count) ? count : 0,
+                room.IsPublic
+                    ? 0
+                    : counts.TryGetValue(room.Id, out var count)
+                        ? count
+                        : 0,
                 accesses[room.Id]))
             .ToArray();
     }

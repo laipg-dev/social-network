@@ -11,24 +11,6 @@ public interface IRoomMemberService
         Guid roomId,
         CancellationToken cancellationToken = default);
 
-    Task<RoomMemberResponse> GetMeAsync(
-        Guid currentUserId,
-        Guid communityId,
-        Guid roomId,
-        CancellationToken cancellationToken = default);
-
-    Task<RoomMemberResponse> JoinAsync(
-        Guid currentUserId,
-        Guid communityId,
-        Guid roomId,
-        CancellationToken cancellationToken = default);
-
-    Task LeaveAsync(
-        Guid currentUserId,
-        Guid communityId,
-        Guid roomId,
-        CancellationToken cancellationToken = default);
-
     Task<RoomMemberResponse> AddAsync(
         Guid currentUserId,
         Guid communityId,

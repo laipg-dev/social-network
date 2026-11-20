@@ -249,7 +249,7 @@ public class CommunityService : ICommunityService
         var access = await _authorization.RequireCommunityPermissionAsync(
             communityId,
             currentUserId,
-            CommunityPermissions.CommunityClose,
+            CommunityPermissions.CommunityEdit,
             cancellationToken);
 
         if (!string.Equals(

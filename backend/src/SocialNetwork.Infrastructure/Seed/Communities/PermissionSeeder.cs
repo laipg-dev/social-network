@@ -8,24 +8,24 @@ public static class PermissionSeeder
 {
     private static readonly (string Code, string Description)[] Catalog =
     [
-        (CommunityPermissions.CommunityView, "View a community."),
         (CommunityPermissions.CommunityEdit, "Update community basic information."),
         (CommunityPermissions.CommunityDelete, "Delete a community."),
-        (CommunityPermissions.CommunityClose, "Close or reopen a community."),
-        (CommunityPermissions.MemberView, "View community members."),
-        (CommunityPermissions.MemberManage, "Manage community members."),
-        (CommunityPermissions.RoleView, "View community roles."),
-        (CommunityPermissions.RoleManage, "Manage community roles and permissions."),
-        (CommunityPermissions.RoomView, "View rooms."),
+        (CommunityPermissions.CommunityMemberView, "View community members."),
+        (CommunityPermissions.CommunityMemberManage, "Manage community members."),
+        (CommunityPermissions.CommunityRoleView, "View community roles."),
+        (CommunityPermissions.CommunityRoleManage, "Manage community roles and permissions."),
         (CommunityPermissions.RoomCreate, "Create rooms."),
-        (CommunityPermissions.RoomEdit, "Update rooms."),
-        (CommunityPermissions.RoomClose, "Close or reopen rooms."),
-        (CommunityPermissions.RoomDelete, "Delete rooms."),
         (CommunityPermissions.RoomManage, "Manage room settings and permission overrides."),
+        (CommunityPermissions.RoomDelete, "Delete rooms."),
+        (CommunityPermissions.RoomAccessManage, "Manage room access."),
+        (CommunityPermissions.MessageSend, "Send messages."),
+        (CommunityPermissions.MessageDeleteOwn, "Delete own messages."),
+        (CommunityPermissions.MessageDeleteAny, "Delete any message."),
+        (CommunityPermissions.MessagePin, "Pin messages."),
         (CommunityPermissions.RoomMemberView, "View room members."),
         (CommunityPermissions.RoomMemberManage, "Manage room members."),
-        (CommunityPermissions.MessageSend, "Send messages."),
-        (CommunityPermissions.MessageDelete, "Delete messages.")
+        (CommunityPermissions.CallMuteMember, "Mute community call members."),
+        (CommunityPermissions.CallRemoveMember, "Remove community call members.")
     ];
 
     public static async Task SeedAsync(

@@ -30,26 +30,22 @@ public static class CommunityRoleDefaults
             [Moderator] = new(
                 50,
                 [
-                    CommunityPermissions.CommunityView,
-                    CommunityPermissions.MemberView,
-                    CommunityPermissions.MemberManage,
-                    CommunityPermissions.RoleView,
-                    CommunityPermissions.RoomView,
+                    CommunityPermissions.CommunityMemberView,
+                    CommunityPermissions.CommunityMemberManage,
+                    CommunityPermissions.CommunityRoleView,
                     CommunityPermissions.RoomCreate,
-                    CommunityPermissions.RoomEdit,
+                    CommunityPermissions.RoomManage,
                     CommunityPermissions.RoomMemberView,
                     CommunityPermissions.RoomMemberManage,
                     CommunityPermissions.MessageSend,
-                    CommunityPermissions.MessageDelete
+                    CommunityPermissions.MessageDeleteAny
                 ]),
 
             [Member] = new(
                 0,
                 [
-                    CommunityPermissions.CommunityView,
-                    CommunityPermissions.MemberView,
-                    CommunityPermissions.RoleView,
-                    CommunityPermissions.RoomView,
+                    CommunityPermissions.CommunityMemberView,
+                    CommunityPermissions.CommunityRoleView,
                     CommunityPermissions.RoomMemberView,
                     CommunityPermissions.MessageSend
                 ])

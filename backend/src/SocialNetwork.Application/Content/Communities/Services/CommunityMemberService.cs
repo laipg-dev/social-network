@@ -189,7 +189,7 @@ public class CommunityMemberService : ICommunityMemberService
         await _authorization.RequireCommunityPermissionAsync(
             communityId,
             currentUserId,
-            CommunityPermissions.MemberView,
+            CommunityPermissions.CommunityMemberView,
             cancellationToken);
 
         var member = await _memberRepository.GetAsync(
@@ -211,7 +211,7 @@ public class CommunityMemberService : ICommunityMemberService
         await _authorization.RequireCommunityPermissionAsync(
             communityId,
             currentUserId,
-            CommunityPermissions.MemberView,
+            CommunityPermissions.CommunityMemberView,
             cancellationToken);
 
         var status = NormalizeStatusFilter(parameters.Status);
@@ -251,7 +251,7 @@ public class CommunityMemberService : ICommunityMemberService
         await _authorization.RequireCommunityPermissionAsync(
             communityId,
             currentUserId,
-            CommunityPermissions.MemberManage,
+            CommunityPermissions.CommunityMemberManage,
             cancellationToken);
 
         var member = await GetMemberForUpdateAsync(
@@ -294,7 +294,7 @@ public class CommunityMemberService : ICommunityMemberService
         await _authorization.RequireCommunityPermissionAsync(
             communityId,
             currentUserId,
-            CommunityPermissions.MemberManage,
+            CommunityPermissions.CommunityMemberManage,
             cancellationToken);
 
         var member = await GetMemberForUpdateAsync(
@@ -330,7 +330,7 @@ public class CommunityMemberService : ICommunityMemberService
         await _authorization.RequireCommunityPermissionAsync(
             communityId,
             currentUserId,
-            CommunityPermissions.MemberManage,
+            CommunityPermissions.CommunityMemberManage,
             cancellationToken);
 
         if (userId == currentUserId)
@@ -380,7 +380,7 @@ public class CommunityMemberService : ICommunityMemberService
         await _authorization.RequireCommunityPermissionAsync(
             communityId,
             currentUserId,
-            CommunityPermissions.MemberManage,
+            CommunityPermissions.CommunityMemberManage,
             cancellationToken);
 
         if (userId == currentUserId)
